@@ -118,6 +118,7 @@
        <!-- <vcsCheckinHandlerFactory implementation="com.microsoft.alm.plugin.idea.tfvc.core.TFSCheckinHandlerFactory"/>
 
         <projectService serviceImplementation="com.microsoft.alm.plugin.idea.tfvc.core.TFSProjectConfiguration"/>-->
+        <diff.DiffTool implementation="com.microsoft.alm.plugin.idea.git.extensions.CommentDiffTool"/>
     </extensions>
 
     <extensions defaultExtensionNs="Git4Idea">
@@ -215,5 +216,7 @@
         <!-- Internal actions -->
         <action internal="true" class="com.microsoft.alm.plugin.idea.tfvc.core.TFVCNotifications$ShowSdkEulaNotification"/>
         <action internal="true" class="com.microsoft.alm.plugin.idea.tfvc.core.TFVCNotifications$ShowCommandLineClientEulaNotification"/>
+
+        <action id="ComparePullRequestAction" class="com.microsoft.alm.plugin.idea.git.actions.ComparePullRequestAction"/>
     </actions>
 </idea-plugin>
