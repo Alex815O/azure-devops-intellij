@@ -3,10 +3,15 @@
 
 package com.microsoft.alm.plugin.context.rest;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.MapperFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.microsoft.alm.client.AlmHttpClientBase;
 import com.microsoft.alm.client.model.ApiResourceVersion;
 import com.microsoft.alm.client.model.NameValueCollection;
 import com.microsoft.alm.sourcecontrol.webapi.GitHttpClient;
+import com.microsoft.alm.sourcecontrol.webapi.model.GitCommitChanges;
 import com.microsoft.alm.sourcecontrol.webapi.model.GitPullRequest;
 
 import javax.ws.rs.client.Client;

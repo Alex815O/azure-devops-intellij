@@ -60,6 +60,14 @@ public class SinglePullRequestLookupOperation extends Operation {
         public List<String> getChangedFiles() {
             return this.changes.stream().map(changes -> changes.getItem().getPath()).collect(Collectors.toList());
         }
+
+        public String getSourceBranchName() {
+            return this.pullRequest.getSourceRefName();
+        }
+
+        public String getTargetBranchName() {
+            return this.pullRequest.getTargetRefName();
+        }
     }
 
     public SinglePullRequestLookupOperation(final String gitRemoteUrl) {

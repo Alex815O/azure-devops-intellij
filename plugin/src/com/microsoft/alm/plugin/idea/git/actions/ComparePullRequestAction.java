@@ -1,25 +1,32 @@
 package com.microsoft.alm.plugin.idea.git.actions;
 
+import com.intellij.diff.DiffContentFactory;
 import com.intellij.diff.DiffManager;
-import com.intellij.diff.chains.DiffRequestChain;
-import com.intellij.diff.chains.SimpleDiffRequestChain;
 import com.intellij.diff.contents.DiffContent;
-import com.intellij.diff.contents.EmptyContent;
 import com.intellij.diff.requests.DiffRequest;
 import com.intellij.diff.requests.SimpleDiffRequest;
-import com.intellij.diff.util.DiffUtil;
 import com.intellij.openapi.actionSystem.AnActionEvent;
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.project.DumbAwareAction;
 import com.intellij.openapi.project.Project;
-import com.microsoft.alm.plugin.idea.git.ui.pullrequest.diff.CommentingDiffTool;
+import com.intellij.openapi.vcs.VcsException;
+import com.intellij.openapi.vfs.VfsUtilCore;
+import com.microsoft.alm.plugin.operations.Operation;
+import com.microsoft.alm.plugin.operations.OperationExecutor;
+import com.microsoft.alm.plugin.operations.OperationFactory;
+import com.microsoft.alm.plugin.operations.SinglePullRequestLookupOperation;
 import git4idea.GitUtil;
+import git4idea.commands.Git;
+import git4idea.commands.GitCommand;
+import git4idea.commands.GitLineHandler;
 import git4idea.repo.GitRepository;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 public class ComparePullRequestAction extends DumbAwareAction {
 
@@ -31,9 +38,70 @@ public class ComparePullRequestAction extends DumbAwareAction {
         var project = anActionEvent.getProject();
         var repository = getGitRepository(project);
 
+        var remoteUrl = repository.getRemotes().stream().findFirst().orElseThrow().getFirstUrl();
+        var pullRequestLookupOperation = OperationFactory.createSinglePullRequestLookupOperation(remoteUrl);
+        pullRequestLookupOperation.addListener(new Operation.Listener() {
+            @Override
+            public void notifyLookupStarted() {
 
-        DiffContent contentLeft = new EmptyContent();
-        DiffContent contentRight = new EmptyContent();
+            }
+
+            @Override
+            public void notifyLookupCompleted() {
+
+            }
+
+            @Override
+            public void notifyLookupResults(Operation.Results results) {
+                if (results.getError() != null) {
+                    log.error(results.getError().getMessage());
+                    return;
+                }
+
+                var targetBranchRefName = ((SinglePullRequestLookupOperation.SinglePullRequestLookupResults) results).getTargetBranchName();
+                var sourceBrancheRefName = ((SinglePullRequestLookupOperation.SinglePullRequestLookupResults) results).getSourceBranchName();
+                var changedFiles = ((SinglePullRequestLookupOperation.SinglePullRequestLookupResults) results).getChangedFiles();
+
+                var targetBranch = repository.getBranches().findBranchByName(targetBranchRefName);
+                var sourceBranch = repository.getBranches().findBranchByName(sourceBrancheRefName);
+
+                var targetBranchName = targetBranch.getName();
+                var sourceBranchName = sourceBranch.getName();
+
+                List<DiffRequest> diffRequests = new ArrayList<>();
+                changedFiles.stream()
+                        .map(changedFile -> repository.getRoot().findFileByRelativePath(changedFile))
+                        .map(virtualFile -> VfsUtilCore.getRelativeLocation(virtualFile, repository.getRoot()))
+                        .forEach(relativeFilePath -> {
+                            String targetFileContent = readFileFromBranch(project, repository, targetBranchName, relativeFilePath);
+                            String sourceFileContent = readFileFromBranch(project, repository, sourceBranchName, relativeFilePath);
+                            var targetContent = DiffContentFactory.getInstance().create(project, targetFileContent);
+                            var sourceContent = DiffContentFactory.getInstance().create(project, sourceFileContent);
+                            var request = createDiffRequest(targetContent, sourceContent);
+                            diffRequests.add(request);
+                        });
+                ApplicationManager.getApplication().invokeLater(() -> {
+                    DiffManager.getInstance().showDiff(project, diffRequests.get(0));
+                });
+            }
+        });
+
+        var pullRequestId = 1;
+        var operationInput = new SinglePullRequestLookupOperation.SinglePullRequestLookupInput(pullRequestId);
+        OperationExecutor.getInstance().executeAsync(pullRequestLookupOperation, operationInput);
+    }
+
+    private String readFileFromBranch(Project project, GitRepository repository, String branchName, String filePath) {
+        GitLineHandler handler = new GitLineHandler(project, repository.getRoot(), GitCommand.SHOW);
+        handler.addParameters(String.format("origin/%s:%s", branchName, filePath));
+        try {
+            return Git.getInstance().runCommand(handler).getOutputOrThrow();
+        } catch (VcsException e) {
+            return "File does not exists in branch: " + e.getMessage();
+        }
+    }
+
+    private @NotNull DiffRequest createDiffRequest(DiffContent contentLeft, DiffContent contentRight) {
         DiffRequest request = new SimpleDiffRequest(
                 "Test Heading",
                 contentLeft,
@@ -41,11 +109,10 @@ public class ComparePullRequestAction extends DumbAwareAction {
                 "Left content",
                 "Right content"
         );
-
-        DiffManager.getInstance().showDiff(project, request);
+        return request;
     }
 
-    private @Nullable GitRepository getGitRepository(Project project) {
+    private @NotNull GitRepository getGitRepository(Project project) {
         var gitRepositories = GitUtil.getRepositories(project);
         return getFirstAndLogOthers(gitRepositories);
     }
