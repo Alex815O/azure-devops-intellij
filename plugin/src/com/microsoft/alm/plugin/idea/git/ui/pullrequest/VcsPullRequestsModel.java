@@ -29,6 +29,8 @@ import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Objects;
+
 public class VcsPullRequestsModel extends TabModelImpl<PullRequestsTreeModel> {
     private static final Logger logger = LoggerFactory.getLogger(VcsPullRequestsModel.class);
     private final GitRepository gitRepository;
@@ -139,6 +141,10 @@ public class VcsPullRequestsModel extends TabModelImpl<PullRequestsTreeModel> {
                 abandonPullRequestTask.queue();
             }
         }
+    }
+
+    public int getSelectedPullRequestId() {
+        return Objects.requireNonNull(this.getSelectedPullRequest()).getPullRequestId();
     }
 
     private GitPullRequest getSelectedPullRequest() {

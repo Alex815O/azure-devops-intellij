@@ -9,12 +9,12 @@ import com.intellij.openapi.actionSystem.ActionPlaces;
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.actionSystem.DataContext;
+import com.intellij.openapi.actionSystem.impl.SimpleDataContext;
 import com.intellij.openapi.project.Project;
 import com.microsoft.alm.plugin.events.ServerEvent;
 import com.microsoft.alm.plugin.idea.common.ui.common.tabs.TabControllerImpl;
 import com.microsoft.alm.plugin.idea.common.ui.common.tabs.TabImpl;
 import com.microsoft.alm.plugin.idea.git.actions.ComparePullRequestAction;
-import jnr.ffi.annotations.In;
 import org.jetbrains.annotations.NotNull;
 
 import java.awt.event.ActionEvent;
@@ -36,12 +36,13 @@ public class VcsPullRequestsController extends TabControllerImpl<VcsPullRequests
             AnAction action = ActionManager.getInstance().getAction("ComparePullRequestAction");
 
             if (action != null) {
-                DataContext dataContext = DataManager.getInstance().getDataContext();
+                DataContext baseContext = DataManager.getInstance().getDataContext();
+                DataContext customContext = SimpleDataContext.getSimpleContext(ComparePullRequestAction.PULL_REQUEST_ID_KEY, model.getSelectedPullRequestId(), baseContext);
                 AnActionEvent event = AnActionEvent.createFromAnAction(
                         action,
                         null,
                         ActionPlaces.UNKNOWN,
-                        dataContext
+                        customContext
                 );
                 action.actionPerformed(event);
             }
