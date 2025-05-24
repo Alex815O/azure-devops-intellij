@@ -20,4 +20,8 @@ public class OperationFactory {
     public static AccountLookupOperation createAccountLookupOperation() {
         return new AccountLookupOperation();
     }
+
+    public static SinglePullRequestLookupOperation createSinglePullRequestLookupOperation(final String remoteUrl) {
+        return new SinglePullRequestLookupOperation(remoteUrl);
+    }
 }

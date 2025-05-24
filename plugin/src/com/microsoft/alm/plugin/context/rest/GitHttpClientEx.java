@@ -62,4 +62,35 @@ public class GitHttpClientEx extends GitHttpClient {
 
         return super.sendRequest(httpRequest, GitPullRequest.class);
     }
+
+    public GitCommitChanges getChanges(String commitId, UUID repositoryId, Integer top, Integer skip) {
+        UUID locationId = UUID.fromString("5bf884f5-3e07-42e9-afb8-1b872267bf16");
+        ApiResourceVersion apiVersion = new ApiResourceVersion("7.1");
+        Map<String, Object> routeValues = new HashMap();
+        routeValues.put("commitId", commitId);
+        routeValues.put("repositoryId", repositoryId);
+        NameValueCollection queryParameters = new NameValueCollection();
+        queryParameters.addIfNotNull("top", top);
+        queryParameters.addIfNotNull("skip", skip);
+        Object httpRequest = super.createRequest(HttpMethod.GET, locationId, routeValues, apiVersion, queryParameters, APPLICATION_JSON_TYPE);
+        String jsonEntity = super.sendRequest(httpRequest, String.class);
+        try {
+            return deserializeJson(jsonEntity);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private GitCommitChanges deserializeJson(final String rawJson) throws JsonProcessingException {
+        ObjectMapper mapper = JsonMapper.builder()
+                .enable(MapperFeature.ACCEPT_CASE_INSENSITIVE_ENUMS)
+                .build();
+
+        var entity = mapper.readValue(
+                rawJson,
+                GitCommitChanges.class
+        );
+        return (GitCommitChanges) entity;
+    }
+
 }
