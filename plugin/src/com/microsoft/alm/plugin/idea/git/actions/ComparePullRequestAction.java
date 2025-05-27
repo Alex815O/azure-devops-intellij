@@ -17,6 +17,7 @@ import com.intellij.openapi.vfs.VfsUtilCore;
 import com.microsoft.alm.plugin.operations.Operation;
 import com.microsoft.alm.plugin.operations.OperationExecutor;
 import com.microsoft.alm.plugin.operations.OperationFactory;
+import com.microsoft.alm.plugin.operations.PullRequestThreadOperation;
 import com.microsoft.alm.plugin.operations.SinglePullRequestLookupOperation;
 import git4idea.GitUtil;
 import git4idea.commands.Git;
@@ -99,6 +100,28 @@ public class ComparePullRequestAction extends DumbAwareAction {
         var pullRequestId = Objects.requireNonNull(anActionEvent.getData(PULL_REQUEST_ID_KEY));
         var operationInput = new SinglePullRequestLookupOperation.SinglePullRequestLookupInput(pullRequestId);
         OperationExecutor.getInstance().executeAsync(pullRequestLookupOperation, operationInput);
+
+
+        var commentThreadListOperation = OperationFactory.createPullRequestThreadListOperation(remoteUrl);
+        var commentThreadListOperationInput = new PullRequestThreadOperation.PullRequestThreadOperationInput(pullRequestId);
+        commentThreadListOperation.addListener(new Operation.Listener() {
+
+            @Override
+            public void notifyLookupStarted() {
+
+            }
+
+            @Override
+            public void notifyLookupCompleted() {
+
+            }
+
+            @Override
+            public void notifyLookupResults(Operation.Results results) {
+            }
+        });
+        OperationExecutor.getInstance().executeAsync(commentThreadListOperation, commentThreadListOperationInput);
+
     }
 
     private String readFileFromBranch(Project project, GitRepository repository, String branchName, String filePath) {

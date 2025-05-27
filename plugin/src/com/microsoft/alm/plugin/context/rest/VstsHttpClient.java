@@ -8,6 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.ws.rs.client.Client;
+import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.Invocation;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Response;
@@ -32,6 +33,27 @@ public class VstsHttpClient {
         final Invocation.Builder b = t.request();
         final Response r = b.get();
         if (r.getStatus() == 200) {
+            return r.readEntity(resultClass);
+        } else {
+            logger.warn("sendRequest error: " + r.getStatus() + " : " + r.getStatusInfo().getReasonPhrase());
+            throw new VstsHttpClientException(r.getStatus(), r.getStatusInfo().getReasonPhrase(), null);
+        }
+    }
+
+    /**
+     * Send an HTTP POST request to a URI and read JSON response as object of specified class
+     *
+     * @param client
+     * @param uri
+     * @param resultClass
+     * @param <TResult>
+     * @return Object of type resultClass
+     */
+    public static <TResult> TResult sendPOSTRequest(final Client client, final String uri, final TResult body,final Class<TResult> resultClass) {
+        final WebTarget t = client.target(uri);
+        final Invocation.Builder b = t.request();
+        final Response r = b.post(Entity.entity(body, "application/json; charset=utf-8"));
+        if (r.getStatus() == 201) {
             return r.readEntity(resultClass);
         } else {
             logger.warn("sendRequest error: " + r.getStatus() + " : " + r.getStatusInfo().getReasonPhrase());

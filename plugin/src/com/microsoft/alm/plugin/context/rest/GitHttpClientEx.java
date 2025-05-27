@@ -97,5 +97,4 @@ public class GitHttpClientEx extends GitHttpClient {
         );
         return (GitCommitChanges) entity;
     }
-
 }
