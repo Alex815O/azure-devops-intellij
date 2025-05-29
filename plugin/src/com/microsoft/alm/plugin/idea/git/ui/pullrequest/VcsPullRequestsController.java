@@ -37,7 +37,7 @@ public class VcsPullRequestsController extends TabControllerImpl<VcsPullRequests
 
             if (action != null) {
                 DataContext baseContext = DataManager.getInstance().getDataContext();
-                DataContext customContext = SimpleDataContext.getSimpleContext(ComparePullRequestAction.PULL_REQUEST_ID_KEY, model.getSelectedPullRequestId(), baseContext);
+                DataContext customContext = SimpleDataContext.getSimpleContext(ComparePullRequestAction.PULL_REQUEST_ID_DATA_KEY, model.getSelectedPullRequestId(), baseContext);
                 AnActionEvent event = AnActionEvent.createFromAnAction(
                         action,
                         null,

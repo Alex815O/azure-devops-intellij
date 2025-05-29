@@ -45,6 +45,10 @@ public class PullRequestThreadOperation extends Operation {
         public PullRequestThreadOperationResult(List<GitPullRequestCommentThread> gitPullRequestCommentThreads) {
             this.gitPullRequestCommentThreads = gitPullRequestCommentThreads;
         }
+
+        public List<GitPullRequestCommentThread> gitPullRequestCommentThreads() {
+            return gitPullRequestCommentThreads;
+        }
     }
 
     public PullRequestThreadOperation(String gitRemoteUrl) {

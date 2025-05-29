@@ -1,36 +1,46 @@
 package com.microsoft.alm.plugin.idea.git.ui.pullrequest.diff;
 
-import com.intellij.diff.DiffContentFactory;
 import com.intellij.diff.DiffContext;
-import com.intellij.diff.DiffManager;
-import com.intellij.diff.DiffRequestPanel;
-import com.intellij.diff.FrameDiffTool;
-import com.intellij.diff.contents.DiffContent;
 import com.intellij.diff.requests.DiffRequest;
-import com.intellij.diff.requests.SimpleDiffRequest;
 import com.intellij.diff.tools.simple.SimpleDiffViewer;
-import com.intellij.openapi.Disposable;
-import com.intellij.openapi.project.Project;
-import com.intellij.openapi.util.Disposer;
+import com.intellij.diff.util.Side;
+import com.intellij.openapi.editor.Editor;
+import com.intellij.openapi.editor.event.EditorMouseAdapter;
+import com.intellij.openapi.editor.event.EditorMouseEvent;
+import com.intellij.openapi.editor.event.EditorMouseEventArea;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-
-import javax.swing.JComponent;
 
 public class CommentingDiffViewer extends SimpleDiffViewer {
 
+    private final CommentingDiffController controller;
 
-    public CommentingDiffViewer(@NotNull DiffContext context, @NotNull DiffRequest request) {
+    public CommentingDiffViewer(@NotNull DiffContext context, @NotNull DiffRequest request, CommentingDiffController controller) {
         super(context, request);
+
+        this.controller = controller;
+
+        var editor = this.getEditor();
+        editor.addEditorMouseListener(new EditorMouseAdapter() {
+            @Override
+            public void mouseClicked(EditorMouseEvent event) {
+                EditorMouseEventArea area = event.getArea();
+                if (isInGatter(area)) {
+
+                    controller.createNewCommentDialog(event, editor);
+                }
+            }
+
+            private boolean isInGatter(EditorMouseEventArea area) {
+                return area == EditorMouseEventArea.LINE_NUMBERS_AREA
+                        || area == EditorMouseEventArea.LINE_MARKERS_AREA
+                        || area == EditorMouseEventArea.ANNOTATIONS_AREA
+                        || area == EditorMouseEventArea.FOLDING_OUTLINE_AREA;
+            }
+        });
     }
 
-    public void addComment(@NotNull String comment) {
-
+    public Editor getEditor() {
+        return super.getEditor(Side.RIGHT);
     }
-
-    public void removeComment(@NotNull String comment) {
-    }
-
-
 
 }

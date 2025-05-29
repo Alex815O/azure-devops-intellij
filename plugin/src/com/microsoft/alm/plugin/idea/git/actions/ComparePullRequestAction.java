@@ -12,12 +12,12 @@ import com.intellij.openapi.actionSystem.DataKey;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.project.DumbAwareAction;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.util.Key;
 import com.intellij.openapi.vcs.VcsException;
 import com.intellij.openapi.vfs.VfsUtilCore;
 import com.microsoft.alm.plugin.operations.Operation;
 import com.microsoft.alm.plugin.operations.OperationExecutor;
 import com.microsoft.alm.plugin.operations.OperationFactory;
-import com.microsoft.alm.plugin.operations.PullRequestThreadOperation;
 import com.microsoft.alm.plugin.operations.SinglePullRequestLookupOperation;
 import git4idea.GitUtil;
 import git4idea.commands.Git;
@@ -36,7 +36,8 @@ import java.util.Objects;
 
 public class ComparePullRequestAction extends DumbAwareAction {
 
-    public static final DataKey<@Nullable Integer> PULL_REQUEST_ID_KEY = DataKey.create("pullRequestId");
+    public static final DataKey<@Nullable Integer> PULL_REQUEST_ID_DATA_KEY = DataKey.create("pullRequestId");
+    public static final Key PULL_REQUEST_ID_KEY = new com.intellij.openapi.util.Key<>("pullRequestId");
 
     private static final Logger log = LoggerFactory.getLogger(ComparePullRequestAction.class);
 
@@ -49,6 +50,7 @@ public class ComparePullRequestAction extends DumbAwareAction {
 
         var remoteUrl = repository.getRemotes().stream().findFirst().orElseThrow().getFirstUrl();
         var pullRequestLookupOperation = OperationFactory.createSinglePullRequestLookupOperation(remoteUrl);
+        var pullRequestId = Objects.requireNonNull(anActionEvent.getData(PULL_REQUEST_ID_DATA_KEY));
         pullRequestLookupOperation.addListener(new Operation.Listener() {
             @Override
             public void notifyLookupStarted() {
@@ -88,6 +90,7 @@ public class ComparePullRequestAction extends DumbAwareAction {
                             var targetContent = DiffContentFactory.getInstance().create(project, targetFileContent);
                             var sourceContent = DiffContentFactory.getInstance().create(project, sourceFileContent);
                             var request = createDiffRequest(relativeFilePath, targetContent, sourceContent, targetBranchName, sourceBranchName);
+                            request.putUserData(PULL_REQUEST_ID_KEY, pullRequestId);
                             diffRequests.add(request);
                         });
                 ApplicationManager.getApplication().invokeLater(() -> {
@@ -97,30 +100,8 @@ public class ComparePullRequestAction extends DumbAwareAction {
             }
         });
 
-        var pullRequestId = Objects.requireNonNull(anActionEvent.getData(PULL_REQUEST_ID_KEY));
         var operationInput = new SinglePullRequestLookupOperation.SinglePullRequestLookupInput(pullRequestId);
         OperationExecutor.getInstance().executeAsync(pullRequestLookupOperation, operationInput);
-
-
-        var commentThreadListOperation = OperationFactory.createPullRequestThreadListOperation(remoteUrl);
-        var commentThreadListOperationInput = new PullRequestThreadOperation.PullRequestThreadOperationInput(pullRequestId);
-        commentThreadListOperation.addListener(new Operation.Listener() {
-
-            @Override
-            public void notifyLookupStarted() {
-
-            }
-
-            @Override
-            public void notifyLookupCompleted() {
-
-            }
-
-            @Override
-            public void notifyLookupResults(Operation.Results results) {
-            }
-        });
-        OperationExecutor.getInstance().executeAsync(commentThreadListOperation, commentThreadListOperationInput);
 
     }
 

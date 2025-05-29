@@ -27,6 +27,9 @@ public class Icons {
     public static final Icon PR_STATUS_NO_RESPONSE = load("/icons/pr-status-noresponse.png");
     public static final Icon PR_STATUS_WAITING = load("/icons/pr-status-waiting.png");
 
+    // pull request diff vierwer icon
+    public static final Icon PR_COMMENT = load("/icons/comment_icon.svg");
+
     //wit icons
     public static final Icon WIT_ADD = load("/icons/wit-add.png");
 
