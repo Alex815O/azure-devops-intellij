@@ -4,17 +4,25 @@ import java.sql.Timestamp;
 import java.util.List;
 
 public class Comment {
-    private ReferenceLinks _links;
-    private IdentityRef author;
-    private CommentType commentType;
-    private String content;
-    private short id;
-    private boolean isDeleted;
-    private Timestamp lastContentUpdatedDate;
-    private Timestamp lastUpdatedDate;
+    private Integer id;
     private Short parentCommentId;
+    private IdentityRef author;
+    private String content;
     private Timestamp publishedDate;
+    private Timestamp lastUpdatedDate;
+    private Timestamp lastContentUpdatedDate;
+    private CommentType commentType;
     private List<IdentityRef> usersLiked;
+    private ReferenceLinks _links;
+
+    public Comment() {
+    }
+
+    public Comment(String content, Short parentCommentId, CommentType commentType) {
+        this.content = content;
+        this.parentCommentId = parentCommentId;
+        this.commentType = commentType;
+    }
 
     public ReferenceLinks get_links() {
         return _links;
@@ -48,20 +56,12 @@ public class Comment {
         this.content = content;
     }
 
-    public short getId() {
+    public Integer getId() {
         return id;
     }
 
-    public void setId(short id) {
+    public void setId(Integer id) {
         this.id = id;
-    }
-
-    public boolean isDeleted() {
-        return isDeleted;
-    }
-
-    public void setDeleted(boolean deleted) {
-        isDeleted = deleted;
     }
 
     public Timestamp getLastContentUpdatedDate() {

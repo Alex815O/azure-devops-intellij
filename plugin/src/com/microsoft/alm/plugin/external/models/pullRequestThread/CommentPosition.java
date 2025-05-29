@@ -4,6 +4,14 @@ public class CommentPosition {
     private int line;
     private int offset;
 
+    public CommentPosition() {
+    }
+
+    public CommentPosition(int line, int offset) {
+        this.line = line;
+        this.offset = offset;
+    }
+
     public int getLine() {
         return line;
     }

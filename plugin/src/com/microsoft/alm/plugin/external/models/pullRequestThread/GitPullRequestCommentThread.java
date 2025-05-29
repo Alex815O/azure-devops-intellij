@@ -6,7 +6,7 @@ import java.util.Map;
 
 public class GitPullRequestCommentThread {
     private GitPullRequestCommentThreadContext pullRequestThreadContext;
-    private int id;
+    private Integer id;
     private Timestamp publishedDate;
     private Timestamp lastUpdatedDate;
     private List<Comment> comments;
@@ -15,6 +15,7 @@ public class GitPullRequestCommentThread {
     private Map<String, IdentityRef> identities;
     private boolean isDeleted;
     private ReferenceLinks _links;
+    private CommentThreadStatus status;
 
     public GitPullRequestCommentThreadContext getPullRequestThreadContext() {
         return pullRequestThreadContext;
@@ -24,11 +25,11 @@ public class GitPullRequestCommentThread {
         this.pullRequestThreadContext = pullRequestThreadContext;
     }
 
-    public int getId() {
+    public Integer getId() {
         return id;
     }
 
-    public void setId(int id) {
+    public void setId(Integer id) {
         this.id = id;
     }
 
@@ -94,5 +95,13 @@ public class GitPullRequestCommentThread {
 
     public void set_links(ReferenceLinks _links) {
         this._links = _links;
+    }
+
+    public CommentThreadStatus getStatus() {
+        return status;
+    }
+
+    public void setStatus(CommentThreadStatus status) {
+        this.status = status;
     }
 }

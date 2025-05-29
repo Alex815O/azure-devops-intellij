@@ -56,7 +56,7 @@ public class PullRequestCommentDialog extends JDialog {
     }
 
     private void onOK() {
-        controller.addComment();
+        controller.addComment(this.commentField.getText());
         dispose();
     }
 

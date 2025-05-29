@@ -10,7 +10,11 @@ import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.editor.event.EditorMouseEvent;
 import com.intellij.openapi.editor.markup.MarkupModel;
 import com.intellij.openapi.editor.markup.RangeHighlighter;
+import com.microsoft.alm.plugin.external.models.pullRequestThread.CommentPosition;
+import com.microsoft.alm.plugin.external.models.pullRequestThread.CommentThreadContext;
+import com.microsoft.alm.plugin.external.models.pullRequestThread.GitPullRequestCommentThread;
 import com.microsoft.alm.plugin.idea.common.resources.Icons;
+import com.microsoft.alm.plugin.idea.git.ui.pullrequest.pullRequestComment.PullRequestCommentController;
 import com.microsoft.alm.plugin.idea.git.ui.pullrequest.pullRequestComment.marker.CommentGutterIconRenderer;
 import com.microsoft.alm.plugin.operations.Operation;
 import com.microsoft.alm.plugin.operations.OperationExecutor;
@@ -67,10 +71,21 @@ public class CommentingDiffController implements Disposable {
         return view;
     }
 
-    protected void createNewCommentDialog(EditorMouseEvent event, Editor editor) {
+    protected void createCommentThread(EditorMouseEvent event, Editor editor) {
         int line = editor.xyToLogicalPosition(event.getMouseEvent().getPoint()).line;
 
-        addGutterIcon(editor, line);
+        var threadPosition = new CommentThreadContext(
+                "/" + this.view.getRequest().getTitle(),
+                new CommentPosition(line, editor.getDocument().getLineEndOffset(line)),
+                new CommentPosition(line, 1)
+        );
+        var commentController = new PullRequestCommentController(threadPosition);
+        commentController.setAddConsumer((commentThread) -> {
+            addGutterIcon(editor, line);
+            this.model.addNewThread(commentThread);
+            this.createThreadOnServer(commentThread);
+        });
+        commentController.show();
     }
 
     private void addGutterIcon(Editor editor, int line) {
@@ -99,6 +114,14 @@ public class CommentingDiffController implements Disposable {
             line = 0;
         }
         return line;
+    }
+
+    private void createThreadOnServer(GitPullRequestCommentThread thread) {
+        var createOperation = OperationFactory.creatPullRequestThreadCreateOperation(this.model.getRemoteUrl());
+        var pullRequestId = this.model.getPullRequestId();
+
+        var createOperationInput = new PullRequestThreadOperation.PullRequestThreadOperationInput(pullRequestId, thread);
+        OperationExecutor.getInstance().executeAsync(createOperation, createOperationInput);
     }
 
     @Override

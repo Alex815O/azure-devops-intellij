@@ -5,6 +5,7 @@ import com.intellij.diff.requests.DiffRequest;
 import com.microsoft.alm.plugin.external.models.pullRequestThread.GitPullRequestCommentThread;
 import com.microsoft.alm.plugin.idea.common.utils.VcsHelper;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -17,7 +18,9 @@ public class CommentingDiffModel {
 
     private final DiffContext diffContext;
     private final DiffRequest diffRequest;
-    private List<GitPullRequestCommentThread> threads; // TODO: define correct Datatype
+    private List<GitPullRequestCommentThread> threads = new ArrayList<>();
+    private List<GitPullRequestCommentThread> newThreads = new ArrayList<>();
+
 
     public CommentingDiffModel(DiffContext context, DiffRequest request) {
         this.diffContext = context;
@@ -36,8 +39,7 @@ public class CommentingDiffModel {
     }
 
     public Map<Integer, GitPullRequestCommentThread> getThreadsPerLineOfFile(String fileName) {
-
-        return this.threads.stream()
+        return this.getAllThreads().stream()
                 .filter(thread -> thread.getThreadContext() != null)
                 .filter(thread -> thread.getThreadContext().getFilePath().contains(fileName))
                 .collect(Collectors.toMap(
@@ -46,12 +48,20 @@ public class CommentingDiffModel {
                 ));
     }
 
+    public List<GitPullRequestCommentThread> getAllThreads() {
+        var allThreads = new ArrayList<GitPullRequestCommentThread>();
+        allThreads.addAll(this.threads);
+        allThreads.addAll(this.newThreads);
+        return allThreads;
+    }
+
     public void setThreads(List<GitPullRequestCommentThread> threads) {
         this.threads = threads;
     }
 
-    public String getActiveRequestName() {
-        return diffRequest.getTitle();
+    public void addNewThread(GitPullRequestCommentThread thread) {
+        this.newThreads.add(thread);
     }
+
 }
 

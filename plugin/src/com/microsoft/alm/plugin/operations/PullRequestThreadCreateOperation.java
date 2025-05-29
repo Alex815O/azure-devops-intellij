@@ -22,7 +22,7 @@ public class PullRequestThreadCreateOperation extends PullRequestThreadOperation
         var pullRequestId = Integer.toString(inputs.pullRequestId);
         var repositoryId = context.getGitRepository().getId().toString();
 
-        var uri = super.gitRemoteUrl.concat(REST_PATH_CREATE_PULL_REQUEST_THREAD);
+        var uri = context.getTeamProjectURI().toString().concat(REST_PATH_CREATE_PULL_REQUEST_THREAD);
         uri = enhanceUri(uri, repositoryId, pullRequestId);
 
         var client =  context.getClient();

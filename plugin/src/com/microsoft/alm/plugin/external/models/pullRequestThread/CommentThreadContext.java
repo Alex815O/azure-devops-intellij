@@ -7,6 +7,15 @@ public class CommentThreadContext {
     private CommentPosition rightFileEnd;
     private CommentPosition rightFileStart;
 
+    public CommentThreadContext() {
+    }
+
+    public CommentThreadContext(String filePath, CommentPosition rightFileEnd, CommentPosition rightFileStart) {
+        this.filePath = filePath;
+        this.rightFileEnd = rightFileEnd;
+        this.rightFileStart = rightFileStart;
+    }
+
     public String getFilePath() {
         return filePath;
     }

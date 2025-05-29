@@ -29,7 +29,8 @@ public class PullRequestThreadOperation extends Operation {
             this.pullRequestId = pullRequestId;
         }
 
-        public PullRequestThreadOperationInput(@Nullable GitPullRequestCommentThread gitPullRequestCommentThread) {
+        public PullRequestThreadOperationInput(int pullRequestId, @Nullable GitPullRequestCommentThread gitPullRequestCommentThread) {
+            this.pullRequestId = pullRequestId;
             this.gitPullRequestCommentThread = gitPullRequestCommentThread;
         }
     }
