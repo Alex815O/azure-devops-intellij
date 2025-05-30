@@ -1,14 +1,20 @@
 package com.microsoft.alm.plugin.idea.git.ui.pullrequest.pullRequestComment;
 
+import com.intellij.ui.components.JBScrollPane;
 import com.microsoft.alm.plugin.external.models.pullRequestThread.Comment;
 
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JDialog;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 import javax.swing.KeyStroke;
+import java.awt.Dimension;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
@@ -27,9 +33,16 @@ public class PullRequestCommentDialog extends JDialog {
     public PullRequestCommentDialog(PullRequestCommentController controller) {
         this.controller = controller;
 
-        setContentPane(contentPane);
+        setTitle("Findings");
+        contentPane.setPreferredSize(new Dimension(550, 400));
+        JBScrollPane scrollPane = new JBScrollPane(contentPane);
+
+        scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+        scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+        setContentPane(scrollPane);
         setModal(true);
         getRootPane().setDefaultButton(buttonOK);
+
 
         buttonOK.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
@@ -57,6 +70,9 @@ public class PullRequestCommentDialog extends JDialog {
                 onCancel();
             }
         }, KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
+
+        pack();
+        setLocationRelativeTo(null);
     }
 
     private void onOK() {
@@ -69,13 +85,36 @@ public class PullRequestCommentDialog extends JDialog {
         dispose();
     }
 
-    private JTextField createCommentTextField(Comment comment) {
-        var textPane = new JTextField();
-        textPane.setText(comment.getContent());
-        textPane.setEditable(false);
-        textPane.setOpaque(false);
-        textPane.setFocusable(false);
-        return textPane;
+    private JPanel createCommentTextField(Comment comment) {
+        JPanel commentPanel = new JPanel(new GridBagLayout());
+
+        GridBagConstraints left = new GridBagConstraints();
+        left.gridx = 0;
+        left.gridy = 0;
+        left.weightx = 0.1;
+        left.weighty = 1.0;
+        left.fill = GridBagConstraints.BOTH;
+
+        GridBagConstraints right = new GridBagConstraints();
+        right.gridx = 1;
+        right.gridy = 0;
+        right.weightx = 0.9;
+        right.weighty = 1.0;
+        right.fill = GridBagConstraints.BOTH;
+
+
+        var textField = new JTextField();
+        var authorLabel = new JLabel(comment.getAuthor().getDisplayName());
+
+        textField.setText(comment.getContent());
+        textField.setEditable(false);
+        textField.setOpaque(false);
+        textField.setFocusable(false);
+
+        commentPanel.add(authorLabel, left);
+        commentPanel.add(textField, right);
+
+        return commentPanel;
     }
 
     public static void main(String[] args) {

@@ -38,6 +38,7 @@ public class ComparePullRequestAction extends DumbAwareAction {
 
     public static final DataKey<@Nullable Integer> PULL_REQUEST_ID_DATA_KEY = DataKey.create("pullRequestId");
     public static final Key PULL_REQUEST_ID_KEY = new com.intellij.openapi.util.Key<>("pullRequestId");
+    public static final Key PULL_REQUEST_FILE_PATH = new com.intellij.openapi.util.Key<>("filePath");
 
     private static final Logger log = LoggerFactory.getLogger(ComparePullRequestAction.class);
 
@@ -91,6 +92,7 @@ public class ComparePullRequestAction extends DumbAwareAction {
                             var sourceContent = DiffContentFactory.getInstance().create(project, sourceFileContent);
                             var request = createDiffRequest(relativeFilePath, targetContent, sourceContent, targetBranchName, sourceBranchName);
                             request.putUserData(PULL_REQUEST_ID_KEY, pullRequestId);
+                            request.putUserData(PULL_REQUEST_FILE_PATH, "/" + relativeFilePath);
                             diffRequests.add(request);
                         });
                 ApplicationManager.getApplication().invokeLater(() -> {

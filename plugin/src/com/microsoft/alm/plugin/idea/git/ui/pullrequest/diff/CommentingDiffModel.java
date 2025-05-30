@@ -11,6 +11,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+import static com.microsoft.alm.plugin.idea.git.actions.ComparePullRequestAction.PULL_REQUEST_FILE_PATH;
 import static com.microsoft.alm.plugin.idea.git.actions.ComparePullRequestAction.PULL_REQUEST_ID_KEY;
 
 public class CommentingDiffModel {
@@ -36,6 +37,10 @@ public class CommentingDiffModel {
 
     public int getPullRequestId() {
         return (Integer) Objects.requireNonNull(diffRequest.getUserData(PULL_REQUEST_ID_KEY));
+    }
+
+    public String getOpenFilePath() {
+        return diffRequest.getUserData(PULL_REQUEST_FILE_PATH).toString();
     }
 
     public Map<Integer, GitPullRequestCommentThread> getThreadsPerLineOfFile(String fileName) {

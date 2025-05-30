@@ -74,10 +74,10 @@ public class CommentingDiffController implements Disposable {
     }
 
     protected void createCommentThreadAndShowDialog(EditorMouseEvent event, Editor editor) {
-        int line = editor.xyToLogicalPosition(event.getMouseEvent().getPoint()).line;
+        int line = editor.xyToLogicalPosition(event.getMouseEvent().getPoint()).line + 1;
         int lineOffset = editor.getDocument().getLineEndOffset(line);
 
-        var thread = createThreadObject(line, lineOffset);
+        var thread = createThreadObject(this.model.getOpenFilePath(), line, lineOffset);
 
         var commentController = new PullRequestCommentController(thread);
         commentController.setAddConsumer((commentThread) -> {
@@ -97,9 +97,9 @@ public class CommentingDiffController implements Disposable {
         commentController.show();
     }
 
-    private @NotNull GitPullRequestCommentThread createThreadObject(int line, int lineEndOffset) {
+    private @NotNull GitPullRequestCommentThread createThreadObject(String filePath, int line, int lineEndOffset) {
         var threadPosition = new CommentThreadContext(
-                "/" + this.view.getRequest().getTitle(),
+                filePath,
                 new CommentPosition(line, lineEndOffset),
                 new CommentPosition(line, 1)
         );
