@@ -58,7 +58,11 @@ public class SinglePullRequestLookupOperation extends Operation {
         }
 
         public List<String> getChangedFiles() {
-            return this.changes.stream().map(changes -> changes.getItem().getPath()).collect(Collectors.toList());
+            return this.changes.stream()
+                    .filter(changes -> !changes.getItem().isFolder())
+                    .map(changes -> changes.getItem().getPath())
+                    .distinct()
+                    .collect(Collectors.toList());
         }
 
         public String getSourceBranchName() {
@@ -119,7 +123,7 @@ public class SinglePullRequestLookupOperation extends Operation {
         return Arrays.stream(pullRequest.getCommits())
                 .map(GitCommitRef::getCommitId)
                 .map(commitId ->
-                        gitHttpClient.getChanges(commitId, context.getGitRepository().getId(), 1, 0))
+                        gitHttpClient.getChanges(commitId, context.getGitRepository().getId()))
                 .collect(Collectors.toList());
     }
 
