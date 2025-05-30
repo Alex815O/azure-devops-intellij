@@ -12,6 +12,7 @@ import com.intellij.openapi.editor.markup.MarkupModel;
 import com.intellij.openapi.editor.markup.RangeHighlighter;
 import com.microsoft.alm.plugin.external.models.pullRequestThread.CommentPosition;
 import com.microsoft.alm.plugin.external.models.pullRequestThread.CommentThreadContext;
+import com.microsoft.alm.plugin.external.models.pullRequestThread.CommentThreadStatus;
 import com.microsoft.alm.plugin.external.models.pullRequestThread.GitPullRequestCommentThread;
 import com.microsoft.alm.plugin.idea.common.resources.Icons;
 import com.microsoft.alm.plugin.idea.git.ui.pullrequest.pullRequestComment.PullRequestCommentController;
@@ -23,6 +24,7 @@ import com.microsoft.alm.plugin.operations.PullRequestThreadOperation;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.Icon;
+import java.util.ArrayList;
 
 public class CommentingDiffController implements Disposable {
     private final CommentingDiffModel model;
@@ -61,7 +63,7 @@ public class CommentingDiffController implements Disposable {
                 var threadsPerLine = model.getThreadsPerLineOfFile(activeFile);
                 var editor = view.getEditor();
 
-                threadsPerLine.keySet().forEach(line -> addGutterIcon(editor, line));
+                threadsPerLine.forEach((line, thread) -> addGutterIcon(editor, line, thread));
             }
         });
         OperationExecutor.getInstance().executeAsync(commentThreadListOperation, commentThreadListOperationInput);
@@ -71,37 +73,56 @@ public class CommentingDiffController implements Disposable {
         return view;
     }
 
-    protected void createCommentThread(EditorMouseEvent event, Editor editor) {
+    protected void createCommentThreadAndShowDialog(EditorMouseEvent event, Editor editor) {
         int line = editor.xyToLogicalPosition(event.getMouseEvent().getPoint()).line;
+        int lineOffset = editor.getDocument().getLineEndOffset(line);
 
-        var threadPosition = new CommentThreadContext(
-                "/" + this.view.getRequest().getTitle(),
-                new CommentPosition(line, editor.getDocument().getLineEndOffset(line)),
-                new CommentPosition(line, 1)
-        );
-        var commentController = new PullRequestCommentController(threadPosition);
+        var thread = createThreadObject(line, lineOffset);
+
+        var commentController = new PullRequestCommentController(thread);
         commentController.setAddConsumer((commentThread) -> {
-            addGutterIcon(editor, line);
+            addGutterIcon(editor, line, commentThread);
             this.model.addNewThread(commentThread);
             this.createThreadOnServer(commentThread);
         });
         commentController.show();
     }
 
-    private void addGutterIcon(Editor editor, int line) {
+    public void showCommentThread(GitPullRequestCommentThread thread) {
+        var commentController = new PullRequestCommentController(thread);
+        commentController.setAddConsumer((commentThread) -> {
+            this.model.updateThreadsComments(commentThread);
+            this.createThreadOnServer(commentThread);
+        });
+        commentController.show();
+    }
+
+    private @NotNull GitPullRequestCommentThread createThreadObject(int line, int lineEndOffset) {
+        var threadPosition = new CommentThreadContext(
+                "/" + this.view.getRequest().getTitle(),
+                new CommentPosition(line, lineEndOffset),
+                new CommentPosition(line, 1)
+        );
+        var thread = new GitPullRequestCommentThread();
+        thread.setComments(new ArrayList<>());
+        thread.setStatus(CommentThreadStatus.active);
+        thread.setThreadContext(threadPosition);
+        return thread;
+    }
+
+    private void addGutterIcon(Editor editor, int line, GitPullRequestCommentThread threadBehindIcon) {
         Document document = editor.getDocument();
         MarkupModel markupModel = editor.getMarkupModel();
 
         Icon commentIcon = Icons.PR_COMMENT;
-        String toolTipp = "PullRequest comment";
-
+        String toolTipp = threadBehindIcon.getComments().get(threadBehindIcon.getComments().size()-1).getContent();
 
         final int closestValidLine = getClosestValidLine(line, document);
         ApplicationManager.getApplication().invokeLater(() -> {
             RangeHighlighter highlighter = markupModel.addLineHighlighter(
                     closestValidLine, 0, null
             );
-            highlighter.setGutterIconRenderer(new CommentGutterIconRenderer(commentIcon, toolTipp) {
+            highlighter.setGutterIconRenderer(new CommentGutterIconRenderer(commentIcon, toolTipp, threadBehindIcon, this) {
             });
         }, ModalityState.any());
     }

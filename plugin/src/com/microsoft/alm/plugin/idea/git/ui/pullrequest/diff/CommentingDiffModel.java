@@ -42,6 +42,8 @@ public class CommentingDiffModel {
         return this.getAllThreads().stream()
                 .filter(thread -> thread.getThreadContext() != null)
                 .filter(thread -> thread.getThreadContext().getFilePath().contains(fileName))
+                .filter(thread -> !thread.isDeleted())
+                .filter(this::filterForEmptyThread)
                 .collect(Collectors.toMap(
                         t1 -> t1.getThreadContext().getRightFileStart().getLine(),
                         t1 -> t1
@@ -60,7 +62,21 @@ public class CommentingDiffModel {
     }
 
     public void addNewThread(GitPullRequestCommentThread thread) {
-        this.newThreads.add(thread);
+        this.threads.add(thread);
+    }
+
+    public void updateThreadsComments(GitPullRequestCommentThread thread) {
+        this.threads.stream()
+                .filter(threadOld -> threadOld.equals(thread))
+                .findFirst()
+                .orElseThrow()
+                .setComments(
+                        thread.getComments()
+                );
+    }
+
+    private boolean filterForEmptyThread(GitPullRequestCommentThread thread) {
+        return thread.getComments().stream().anyMatch(comment -> comment.getContent() != null && !comment.getContent().isBlank());
     }
 
 }

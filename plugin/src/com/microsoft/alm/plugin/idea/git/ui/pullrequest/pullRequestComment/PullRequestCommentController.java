@@ -1,8 +1,9 @@
 package com.microsoft.alm.plugin.idea.git.ui.pullrequest.pullRequestComment;
 
-import com.microsoft.alm.plugin.external.models.pullRequestThread.CommentThreadContext;
+import com.microsoft.alm.plugin.external.models.pullRequestThread.Comment;
 import com.microsoft.alm.plugin.external.models.pullRequestThread.GitPullRequestCommentThread;
 
+import java.util.List;
 import java.util.function.Consumer;
 
 public class PullRequestCommentController {
@@ -11,16 +12,13 @@ public class PullRequestCommentController {
     private PullRequestCommentModel model;
     private Consumer<GitPullRequestCommentThread> addComment;
 
-    public PullRequestCommentController(CommentThreadContext threadPosition) {
-        this.model = new PullRequestCommentModel(threadPosition);
+    public PullRequestCommentController(GitPullRequestCommentThread thread) {
+        this.model = new PullRequestCommentModel(thread);
         this.view = new PullRequestCommentDialog(this);
     }
 
     public void setAddConsumer(Consumer<GitPullRequestCommentThread> addComment) {
         this.addComment = addComment;
-    }
-
-    public PullRequestCommentController() {
     }
 
     public void show() {
@@ -33,5 +31,9 @@ public class PullRequestCommentController {
     }
 
     protected void cancelComment() {
+    }
+
+    public List<Comment> getComments() {
+        return this.model.getComments();
     }
 }

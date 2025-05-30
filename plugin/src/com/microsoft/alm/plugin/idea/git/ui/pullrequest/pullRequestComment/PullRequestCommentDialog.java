@@ -1,5 +1,8 @@
 package com.microsoft.alm.plugin.idea.git.ui.pullrequest.pullRequestComment;
 
+import com.microsoft.alm.plugin.external.models.pullRequestThread.Comment;
+
+import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JDialog;
@@ -16,6 +19,7 @@ public class PullRequestCommentDialog extends JDialog {
     private JPanel contentPane;
     private JButton buttonOK;
     private JButton buttonCancel;
+    private JPanel commentPanel;
     private JTextField commentField;
 
     private final PullRequestCommentController controller;
@@ -65,6 +69,15 @@ public class PullRequestCommentDialog extends JDialog {
         dispose();
     }
 
+    private JTextField createCommentTextField(Comment comment) {
+        var textPane = new JTextField();
+        textPane.setText(comment.getContent());
+        textPane.setEditable(false);
+        textPane.setOpaque(false);
+        textPane.setFocusable(false);
+        return textPane;
+    }
+
     public static void main(String[] args) {
         PullRequestCommentDialog dialog = new PullRequestCommentDialog(null);
         dialog.pack();
@@ -72,4 +85,18 @@ public class PullRequestCommentDialog extends JDialog {
         System.exit(0);
     }
 
+    private void createUIComponents() {
+        var comments = this.controller.getComments();
+
+        commentPanel = new JPanel();
+        commentPanel.setLayout(new BoxLayout(commentPanel, BoxLayout.Y_AXIS));
+
+        int idx = 0;
+        for (Comment comment : comments) {
+            commentPanel.add(createCommentTextField(comment), idx++);
+        }
+
+        commentPanel.revalidate();
+        commentPanel.repaint();
+    }
 }
