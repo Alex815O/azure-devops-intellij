@@ -50,7 +50,7 @@ public class CommentingDiffModel {
                 .filter(thread -> !thread.isDeleted())
                 .filter(this::filterForEmptyThread)
                 .collect(Collectors.toMap(
-                        t1 -> t1.getThreadContext().getRightFileStart().getLine() + 1,
+                        t1 -> t1.getThreadContext().getRightFileStart().getLine() - 1,
                         t1 -> t1
                 ));
     }

@@ -74,10 +74,10 @@ public class CommentingDiffController implements Disposable {
     }
 
     protected void createCommentThreadAndShowDialog(EditorMouseEvent event, Editor editor) {
-        int line = editor.xyToLogicalPosition(event.getMouseEvent().getPoint()).line + 1;
+        int line = editor.xyToLogicalPosition(event.getMouseEvent().getPoint()).line;
         int lineOffset = editor.getDocument().getLineEndOffset(line);
 
-        var thread = createThreadObject(this.model.getOpenFilePath(), line, lineOffset);
+        var thread = createThreadObject(this.model.getOpenFilePath(), line+1, lineOffset);
 
         var commentController = new PullRequestCommentController(thread);
         commentController.setAddConsumer((commentThread) -> {
