@@ -3,6 +3,7 @@ package com.microsoft.alm.plugin.external.models.pullRequestThread;
 import java.sql.Timestamp;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class GitPullRequestCommentThread {
     private GitPullRequestCommentThreadContext pullRequestThreadContext;
@@ -16,6 +17,18 @@ public class GitPullRequestCommentThread {
     private boolean isDeleted;
     private ReferenceLinks _links;
     private CommentThreadStatus status;
+
+
+    public GitPullRequestCommentThread createMinimalCommentThread() {
+        var thread = new GitPullRequestCommentThread();
+        thread.setComments(this.getComments().stream()
+                .filter(comment -> comment.getId() == null)
+                .map(comment -> new Comment(comment.getContent(), comment.getParentCommentId(), comment.getCommentType()))
+                .collect(Collectors.toList()));
+        thread.setThreadContext(new CommentThreadContext(this.threadContext.getFilePath(), this.threadContext.getRightFileEnd(), this.threadContext.getRightFileStart()));
+        thread.setStatus(this.getStatus());
+        return thread;
+    }
 
     public GitPullRequestCommentThreadContext getPullRequestThreadContext() {
         return pullRequestThreadContext;
@@ -104,4 +117,5 @@ public class GitPullRequestCommentThread {
     public void setStatus(CommentThreadStatus status) {
         this.status = status;
     }
+
 }

@@ -92,7 +92,7 @@ public class CommentingDiffController implements Disposable {
         var commentController = new PullRequestCommentController(thread);
         commentController.setAddConsumer((commentThread) -> {
             this.model.updateThreadsComments(commentThread);
-            this.createThreadOnServer(commentThread);
+            this.updateThreadOnServer(commentThread);
         });
         commentController.show();
     }
@@ -141,8 +141,34 @@ public class CommentingDiffController implements Disposable {
         var createOperation = OperationFactory.creatPullRequestThreadCreateOperation(this.model.getRemoteUrl());
         var pullRequestId = this.model.getPullRequestId();
 
+        createOperation.addListener(new Operation.Listener() {
+            @Override
+            public void notifyLookupResults(Operation.Results results) {
+                var threadId = ((PullRequestThreadOperation.PullRequestThreadOperationResult) results).getGitPullRequestCommentThread().getId();
+                thread.setId(threadId);
+            }
+
+            @Override
+            public void notifyLookupCompleted() {
+
+            }
+
+            @Override
+            public void notifyLookupStarted() {
+
+            }
+        });
         var createOperationInput = new PullRequestThreadOperation.PullRequestThreadOperationInput(pullRequestId, thread);
         OperationExecutor.getInstance().executeAsync(createOperation, createOperationInput);
+    }
+
+    private void updateThreadOnServer(GitPullRequestCommentThread thread) {
+        var updateOperation = OperationFactory.createPullRequestThreadUpdateOperation(this.model.getRemoteUrl());
+        var pullRequestId = this.model.getPullRequestId();
+        var threadId = thread.getId();
+
+        var updateOperationInput = new PullRequestThreadOperation.PullRequestThreadOperationInput(pullRequestId, thread, threadId);
+        OperationExecutor.getInstance().executeAsync(updateOperation, updateOperationInput);
     }
 
     @Override

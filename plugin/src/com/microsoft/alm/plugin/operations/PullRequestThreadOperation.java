@@ -23,6 +23,7 @@ public class PullRequestThreadOperation extends Operation {
     public static class PullRequestThreadOperationInput extends Operation.CredInputsImpl {
         protected @Nullable GitPullRequestCommentThread gitPullRequestCommentThread;
         protected int pullRequestId;
+        protected int threadId;
 
         public PullRequestThreadOperationInput(int pullRequestId) {
             super.setPromptForCreds(false);
@@ -32,6 +33,12 @@ public class PullRequestThreadOperation extends Operation {
         public PullRequestThreadOperationInput(int pullRequestId, @Nullable GitPullRequestCommentThread gitPullRequestCommentThread) {
             this.pullRequestId = pullRequestId;
             this.gitPullRequestCommentThread = gitPullRequestCommentThread;
+        }
+
+        public PullRequestThreadOperationInput(int pullRequestId, @Nullable GitPullRequestCommentThread gitPullRequestCommentThread, int threadId) {
+            this.pullRequestId = pullRequestId;
+            this.gitPullRequestCommentThread = gitPullRequestCommentThread;
+            this.threadId = threadId;
         }
     }
 
@@ -49,6 +56,10 @@ public class PullRequestThreadOperation extends Operation {
 
         public List<GitPullRequestCommentThread> gitPullRequestCommentThreads() {
             return gitPullRequestCommentThreads;
+        }
+
+        public GitPullRequestCommentThread getGitPullRequestCommentThread() {
+            return gitPullRequestCommentThread;
         }
     }
 

@@ -68,6 +68,32 @@ public class VstsHttpClient {
         }
     }
 
+    /**
+     * Send an HTTP PATCH request to a URI and read JSON response as object of specified class
+     *
+     * @param client
+     * @param uri
+     * @param resultClass
+     * @param <TResult>
+     * @return Object of type resultClass
+     */
+    public static <TResult> TResult sendPATCHRequest(final Client client, final String uri, final TResult body, final Class<TResult> resultClass) {
+        client.register(new LoggingFeature(java.util.logging.Logger.getLogger(LoggingFeature.DEFAULT_LOGGER_NAME),
+                Level.WARNING,
+                LoggingFeature.Verbosity.PAYLOAD_ANY,
+                8192)
+        );
+        final WebTarget t = client.target(uri);
+        final Invocation.Builder b = t.request();
+        final Response r = b.method("PATCH", Entity.entity(body, "application/json; charset=utf-8"));
+        if (r.getStatus() == 200) {
+            return r.readEntity(resultClass);
+        } else {
+            logger.warn("sendRequest error: " + r.getStatus() + " : " + r.getStatusInfo().getReasonPhrase());
+            throw new VstsHttpClientException(r.getStatus(), r.getStatusInfo().getReasonPhrase(), null);
+        }
+    }
+
     public static class VstsHttpClientException extends VssException {
         final int statusCode;
 
