@@ -67,6 +67,7 @@ public class CommentingDiffModel {
     }
 
     public void addNewThread(GitPullRequestCommentThread thread) {
+        this.threads.removeIf(t -> t.getId() == null);
         this.threads.add(thread);
     }
 

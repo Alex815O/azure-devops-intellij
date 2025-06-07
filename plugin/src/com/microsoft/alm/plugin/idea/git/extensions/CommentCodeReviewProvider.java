@@ -9,8 +9,8 @@ import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class CommentDiffTool implements FrameDiffTool {
-    private static final Logger log = LoggerFactory.getLogger(CommentDiffTool.class);
+public class CommentCodeReviewProvider implements FrameDiffTool {
+    private static final Logger log = LoggerFactory.getLogger(CommentCodeReviewProvider.class);
 
     @Override
     public @NotNull DiffViewer createComponent(@NotNull DiffContext diffContext, @NotNull DiffRequest diffRequest) {

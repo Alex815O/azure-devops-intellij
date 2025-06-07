@@ -25,8 +25,7 @@ public class CommentingDiffViewer extends SimpleDiffViewer {
             public void mouseClicked(EditorMouseEvent event) {
                 EditorMouseEventArea area = event.getArea();
                 if (isInGatter(area)) {
-
-                    controller.createCommentThreadAndShowDialog(event, editor);
+                    controller.createThreadAndShowDialog(event, editor);
                 }
             }
 

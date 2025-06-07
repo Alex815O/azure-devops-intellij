@@ -77,6 +77,11 @@ public class ComparePullRequestAction extends DumbAwareAction {
                 var targetBranch = repository.getBranches().findBranchByName(targetBranchRefName);
                 var sourceBranch = repository.getBranches().findBranchByName(sourceBrancheRefName);
 
+                log.info("Target branch: {}", targetBranchRefName);
+                log.info("Source branch: {}", sourceBrancheRefName);
+                log.info("localBranches: {}", repository.getBranches().getLocalBranches());
+                log.info("remoteBranches: {}", repository.getBranches().getRemoteBranches());
+
                 var targetBranchName = targetBranch.getName();
                 var sourceBranchName = sourceBranch.getName();
 

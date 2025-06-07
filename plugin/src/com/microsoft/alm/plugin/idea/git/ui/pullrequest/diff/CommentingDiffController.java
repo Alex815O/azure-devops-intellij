@@ -36,7 +36,6 @@ public class CommentingDiffController implements Disposable {
     }
 
     public void loadModel() {
-
         String remoteUrl = model.getRemoteUrl();
         int pullRequestId = model.getPullRequestId();
 
@@ -73,7 +72,7 @@ public class CommentingDiffController implements Disposable {
         return view;
     }
 
-    protected void createCommentThreadAndShowDialog(EditorMouseEvent event, Editor editor) {
+    protected void createThreadAndShowDialog(EditorMouseEvent event, Editor editor) {
         int line = editor.xyToLogicalPosition(event.getMouseEvent().getPoint()).line;
         int lineOffset = editor.getDocument().getLineEndOffset(line);
 
@@ -81,9 +80,23 @@ public class CommentingDiffController implements Disposable {
 
         var commentController = new PullRequestCommentController(thread);
         commentController.setAddConsumer((commentThread) -> {
-            addGutterIcon(editor, line, commentThread);
-            this.model.addNewThread(commentThread);
-            this.createThreadOnServer(commentThread);
+            this.createThreadOnServerAndModel(commentThread, new Operation.Listener() {
+                @Override
+                public void notifyLookupResults(Operation.Results results) {
+                    var thread = ((PullRequestThreadOperation.PullRequestThreadOperationResult) results).getGitPullRequestCommentThread();
+                    model.addNewThread(thread);
+                    addGutterIcon(editor, line, thread);
+                }
+
+                @Override
+                public void notifyLookupCompleted() {
+
+                }
+
+                @Override
+                public void notifyLookupStarted() {
+                }
+            });
         });
         commentController.show();
     }
@@ -134,27 +147,11 @@ public class CommentingDiffController implements Disposable {
         return line;
     }
 
-    private void createThreadOnServer(GitPullRequestCommentThread thread) {
+    private void createThreadOnServerAndModel(GitPullRequestCommentThread thread, Operation.Listener operationListener) {
         var createOperation = OperationFactory.creatPullRequestThreadCreateOperation(this.model.getRemoteUrl());
         var pullRequestId = this.model.getPullRequestId();
 
-        createOperation.addListener(new Operation.Listener() {
-            @Override
-            public void notifyLookupResults(Operation.Results results) {
-                var threadId = ((PullRequestThreadOperation.PullRequestThreadOperationResult) results).getGitPullRequestCommentThread().getId();
-                thread.setId(threadId);
-            }
-
-            @Override
-            public void notifyLookupCompleted() {
-
-            }
-
-            @Override
-            public void notifyLookupStarted() {
-
-            }
-        });
+        createOperation.addListener(operationListener);
         var createOperationInput = new PullRequestThreadOperation.PullRequestThreadOperationInput(pullRequestId, thread);
         OperationExecutor.getInstance().executeAsync(createOperation, createOperationInput);
     }
