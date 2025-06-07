@@ -26,6 +26,9 @@ public class PullRequestCommentController {
     }
 
     protected void addComment(String content) {
+        if (content.trim().isEmpty()) {
+            return;
+        }
         this.model.addComment(content);
         addComment.accept(this.model.getThread());
     }
