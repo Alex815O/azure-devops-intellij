@@ -3,6 +3,7 @@ package com.microsoft.alm.plugin.external.models.pullRequestThread;
 import java.sql.Timestamp;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 public class GitPullRequestCommentThread {
@@ -118,4 +119,15 @@ public class GitPullRequestCommentThread {
         this.status = status;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (o == null || getClass() != o.getClass()) return false;
+        GitPullRequestCommentThread thread = (GitPullRequestCommentThread) o;
+        return Objects.equals(id, thread.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(id);
+    }
 }

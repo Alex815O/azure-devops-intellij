@@ -71,13 +71,16 @@ public class CommentingDiffModel {
     }
 
     public void updateThreadsComments(GitPullRequestCommentThread thread) {
-        this.threads.stream()
+        var threadToUpdate = this.threads.stream()
                 .filter(threadOld -> threadOld.equals(thread))
                 .findFirst()
-                .orElseThrow()
-                .setComments(
-                        thread.getComments()
-                );
+                .orElseThrow();
+        var updatedCommentList = threadToUpdate.getComments()
+                .stream()
+                .filter(c -> Objects.nonNull(c.getId()))
+                .collect(Collectors.toList());
+        updatedCommentList.addAll(thread.getComments());
+        threadToUpdate.setComments(updatedCommentList);
     }
 
     private boolean filterForEmptyThread(GitPullRequestCommentThread thread) {
