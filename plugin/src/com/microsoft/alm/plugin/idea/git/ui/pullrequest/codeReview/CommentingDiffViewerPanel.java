@@ -1,4 +1,4 @@
-package com.microsoft.alm.plugin.idea.git.ui.pullrequest.diff;
+package com.microsoft.alm.plugin.idea.git.ui.pullrequest.codeReview;
 
 import com.intellij.diff.DiffContext;
 import com.intellij.diff.requests.DiffRequest;
@@ -10,11 +10,11 @@ import com.intellij.openapi.editor.event.EditorMouseEvent;
 import com.intellij.openapi.editor.event.EditorMouseEventArea;
 import org.jetbrains.annotations.NotNull;
 
-public class CommentingDiffViewer extends SimpleDiffViewer {
+public class CommentingDiffViewerPanel extends SimpleDiffViewer {
 
-    private final CommentingDiffController controller;
+    private final CommentingDiffViewerController controller;
 
-    public CommentingDiffViewer(@NotNull DiffContext context, @NotNull DiffRequest request, CommentingDiffController controller) {
+    public CommentingDiffViewerPanel(@NotNull DiffContext context, @NotNull DiffRequest request, CommentingDiffViewerController controller) {
         super(context, request);
 
         this.controller = controller;

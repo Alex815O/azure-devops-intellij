@@ -1,4 +1,4 @@
-package com.microsoft.alm.plugin.idea.git.ui.pullrequest.diff;
+package com.microsoft.alm.plugin.idea.git.ui.pullrequest.codeReview;
 
 import com.intellij.diff.DiffContext;
 import com.intellij.diff.requests.DiffRequest;
@@ -14,7 +14,7 @@ import java.util.stream.Collectors;
 import static com.microsoft.alm.plugin.idea.git.actions.ComparePullRequestAction.PULL_REQUEST_FILE_PATH;
 import static com.microsoft.alm.plugin.idea.git.actions.ComparePullRequestAction.PULL_REQUEST_ID_KEY;
 
-public class CommentingDiffModel {
+public class CommentingDiffViewerModel {
 
 
     private final DiffContext diffContext;
@@ -23,7 +23,7 @@ public class CommentingDiffModel {
     private List<GitPullRequestCommentThread> newThreads = new ArrayList<>();
 
 
-    public CommentingDiffModel(DiffContext context, DiffRequest request) {
+    public CommentingDiffViewerModel(DiffContext context, DiffRequest request) {
         this.diffContext = context;
         this.diffRequest = request;
     }

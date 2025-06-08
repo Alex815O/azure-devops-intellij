@@ -1,4 +1,4 @@
-package com.microsoft.alm.plugin.idea.git.ui.pullrequest.pullRequestComment;
+package com.microsoft.alm.plugin.idea.git.ui.pullrequest.codeReview.pullRequestComment;
 
 import com.intellij.ui.JBColor;
 import com.intellij.ui.components.JBScrollPane;

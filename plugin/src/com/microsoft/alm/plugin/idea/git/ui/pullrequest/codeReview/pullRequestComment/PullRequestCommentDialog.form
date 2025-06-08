@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<form xmlns="http://www.intellij.com/uidesigner/form/" version="1" bind-to-class="com.microsoft.alm.plugin.idea.git.ui.pullrequest.pullRequestComment.PullRequestCommentDialog">
+<form xmlns="http://www.intellij.com/uidesigner/form/" version="1" bind-to-class="com.microsoft.alm.plugin.idea.git.ui.pullrequest.codeReview.pullRequestComment.PullRequestCommentDialog">
   <scrollpane id="be1cc">
     <constraints>
       <xy x="48" y="188" width="731" height="264"/>

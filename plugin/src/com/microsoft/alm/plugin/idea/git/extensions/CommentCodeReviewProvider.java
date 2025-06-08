@@ -3,7 +3,7 @@ package com.microsoft.alm.plugin.idea.git.extensions;
 import com.intellij.diff.DiffContext;
 import com.intellij.diff.FrameDiffTool;
 import com.intellij.diff.requests.DiffRequest;
-import com.microsoft.alm.plugin.idea.git.ui.pullrequest.diff.CommentingDiffController;
+import com.microsoft.alm.plugin.idea.git.ui.pullrequest.codeReview.CommentingDiffViewerController;
 import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
@@ -16,7 +16,7 @@ public class CommentCodeReviewProvider implements FrameDiffTool {
     public @NotNull DiffViewer createComponent(@NotNull DiffContext diffContext, @NotNull DiffRequest diffRequest) {
         log.info("Creating comment diff viewer");
 
-        CommentingDiffController controller = new CommentingDiffController(diffContext, diffRequest);
+        CommentingDiffViewerController controller = new CommentingDiffViewerController(diffContext, diffRequest);
         controller.loadModel();
         return controller.getView();
     }

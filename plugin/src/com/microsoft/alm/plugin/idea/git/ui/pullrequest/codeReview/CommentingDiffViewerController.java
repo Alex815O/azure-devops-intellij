@@ -1,4 +1,4 @@
-package com.microsoft.alm.plugin.idea.git.ui.pullrequest.diff;
+package com.microsoft.alm.plugin.idea.git.ui.pullrequest.codeReview;
 
 import com.intellij.diff.DiffContext;
 import com.intellij.diff.requests.DiffRequest;
@@ -15,8 +15,8 @@ import com.microsoft.alm.plugin.external.models.pullRequestThread.CommentThreadC
 import com.microsoft.alm.plugin.external.models.pullRequestThread.CommentThreadStatus;
 import com.microsoft.alm.plugin.external.models.pullRequestThread.GitPullRequestCommentThread;
 import com.microsoft.alm.plugin.idea.common.resources.Icons;
-import com.microsoft.alm.plugin.idea.git.ui.pullrequest.pullRequestComment.PullRequestCommentController;
-import com.microsoft.alm.plugin.idea.git.ui.pullrequest.pullRequestComment.marker.CommentGutterIconRenderer;
+import com.microsoft.alm.plugin.idea.git.ui.pullrequest.codeReview.marker.CommentGutterIconRenderer;
+import com.microsoft.alm.plugin.idea.git.ui.pullrequest.codeReview.pullRequestComment.PullRequestCommentController;
 import com.microsoft.alm.plugin.operations.Operation;
 import com.microsoft.alm.plugin.operations.OperationExecutor;
 import com.microsoft.alm.plugin.operations.OperationFactory;
@@ -26,13 +26,13 @@ import org.jetbrains.annotations.NotNull;
 import javax.swing.Icon;
 import java.util.ArrayList;
 
-public class CommentingDiffController implements Disposable {
-    private final CommentingDiffModel model;
-    private CommentingDiffViewer view;
+public class CommentingDiffViewerController implements Disposable {
+    private final CommentingDiffViewerModel model;
+    private CommentingDiffViewerPanel view;
 
-    public CommentingDiffController(@NotNull DiffContext context, @NotNull DiffRequest request) {
-        this.model = new CommentingDiffModel(context, request);
-        this.view = new CommentingDiffViewer(context, request, this);
+    public CommentingDiffViewerController(@NotNull DiffContext context, @NotNull DiffRequest request) {
+        this.model = new CommentingDiffViewerModel(context, request);
+        this.view = new CommentingDiffViewerPanel(context, request, this);
     }
 
     public void loadModel() {
@@ -68,7 +68,7 @@ public class CommentingDiffController implements Disposable {
         OperationExecutor.getInstance().executeAsync(commentThreadListOperation, commentThreadListOperationInput);
     }
 
-    public CommentingDiffViewer getView() {
+    public CommentingDiffViewerPanel getView() {
         return view;
     }
 

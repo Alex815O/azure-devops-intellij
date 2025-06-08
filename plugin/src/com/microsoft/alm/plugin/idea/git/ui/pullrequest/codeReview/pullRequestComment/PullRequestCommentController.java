@@ -1,4 +1,4 @@
-package com.microsoft.alm.plugin.idea.git.ui.pullrequest.pullRequestComment;
+package com.microsoft.alm.plugin.idea.git.ui.pullrequest.codeReview.pullRequestComment;
 
 import com.microsoft.alm.plugin.external.models.pullRequestThread.Comment;
 import com.microsoft.alm.plugin.external.models.pullRequestThread.GitPullRequestCommentThread;
