@@ -8,8 +8,8 @@ import java.util.function.Consumer;
 
 public class PullRequestCommentController {
 
-    private PullRequestCommentDialog view;
-    private PullRequestCommentModel model;
+    private final PullRequestCommentDialog view;
+    private final PullRequestCommentModel model;
     private Consumer<GitPullRequestCommentThread> addComment;
 
     public PullRequestCommentController(GitPullRequestCommentThread thread) {

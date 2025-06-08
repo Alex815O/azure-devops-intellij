@@ -45,12 +45,10 @@ public class CommentingDiffViewerController implements Disposable {
 
             @Override
             public void notifyLookupStarted() {
-
             }
 
             @Override
             public void notifyLookupCompleted() {
-
             }
 
             @Override
@@ -76,7 +74,7 @@ public class CommentingDiffViewerController implements Disposable {
         int line = editor.xyToLogicalPosition(event.getMouseEvent().getPoint()).line;
         int lineOffset = editor.getDocument().getLineEndOffset(line);
 
-        var thread = createThreadObject(this.model.getOpenFilePath(), line+1, lineOffset);
+        var thread = createThreadObject(this.model.getOpenFilePath(), line + 1, lineOffset);
 
         var commentController = new PullRequestCommentController(thread);
         commentController.setAddConsumer((commentThread) -> {
@@ -90,7 +88,6 @@ public class CommentingDiffViewerController implements Disposable {
 
                 @Override
                 public void notifyLookupCompleted() {
-
                 }
 
                 @Override
@@ -101,31 +98,12 @@ public class CommentingDiffViewerController implements Disposable {
         commentController.show();
     }
 
-    public void showCommentThread(GitPullRequestCommentThread thread) {
-        var commentController = new PullRequestCommentController(thread);
-        commentController.setAddConsumer(this::updateThreadOnServerAndModel);
-        commentController.show();
-    }
-
-    private @NotNull GitPullRequestCommentThread createThreadObject(String filePath, int line, int lineEndOffset) {
-        var threadPosition = new CommentThreadContext(
-                filePath,
-                new CommentPosition(line, lineEndOffset),
-                new CommentPosition(line, 1)
-        );
-        var thread = new GitPullRequestCommentThread();
-        thread.setComments(new ArrayList<>());
-        thread.setStatus(CommentThreadStatus.active);
-        thread.setThreadContext(threadPosition);
-        return thread;
-    }
-
     private void addGutterIcon(Editor editor, int line, GitPullRequestCommentThread threadBehindIcon) {
         Document document = editor.getDocument();
         MarkupModel markupModel = editor.getMarkupModel();
 
         Icon commentIcon = Icons.PR_COMMENT;
-        String toolTipp = threadBehindIcon.getComments().get(threadBehindIcon.getComments().size()-1).getContent();
+        String toolTipp = threadBehindIcon.getComments().get(threadBehindIcon.getComments().size() - 1).getContent();
 
         final int closestValidLine = getClosestValidLine(line, document);
         ApplicationManager.getApplication().invokeLater(() -> {
@@ -137,15 +115,6 @@ public class CommentingDiffViewerController implements Disposable {
         }, ModalityState.any());
     }
 
-    private static int getClosestValidLine(int line, Document document) {
-        if (line >= document.getLineCount()) {
-            line = document.getLineCount() - 1;
-        }
-        if (line < 0) {
-            line = 0;
-        }
-        return line;
-    }
 
     private void createThreadOnServerAndModel(GitPullRequestCommentThread thread, Operation.Listener operationListener) {
         var createOperation = OperationFactory.creatPullRequestThreadCreateOperation(this.model.getRemoteUrl());
@@ -154,6 +123,13 @@ public class CommentingDiffViewerController implements Disposable {
         createOperation.addListener(operationListener);
         var createOperationInput = new PullRequestThreadOperation.PullRequestThreadOperationInput(pullRequestId, thread);
         OperationExecutor.getInstance().executeAsync(createOperation, createOperationInput);
+    }
+
+
+    public void showCommentThread(GitPullRequestCommentThread thread) {
+        var commentController = new PullRequestCommentController(thread);
+        commentController.setAddConsumer(this::updateThreadOnServerAndModel);
+        commentController.show();
     }
 
     private void updateThreadOnServerAndModel(GitPullRequestCommentThread thread) {
@@ -181,6 +157,29 @@ public class CommentingDiffViewerController implements Disposable {
 
         var updateOperationInput = new PullRequestThreadOperation.PullRequestThreadOperationInput(pullRequestId, thread, threadId);
         OperationExecutor.getInstance().executeAsync(updateOperation, updateOperationInput);
+    }
+
+    private @NotNull GitPullRequestCommentThread createThreadObject(String filePath, int line, int lineEndOffset) {
+        var threadPosition = new CommentThreadContext(
+                filePath,
+                new CommentPosition(line, lineEndOffset),
+                new CommentPosition(line, 1)
+        );
+        var thread = new GitPullRequestCommentThread();
+        thread.setComments(new ArrayList<>());
+        thread.setStatus(CommentThreadStatus.active);
+        thread.setThreadContext(threadPosition);
+        return thread;
+    }
+
+    private static int getClosestValidLine(int line, Document document) {
+        if (line >= document.getLineCount()) {
+            line = document.getLineCount() - 1;
+        }
+        if (line < 0) {
+            line = 0;
+        }
+        return line;
     }
 
     @Override
