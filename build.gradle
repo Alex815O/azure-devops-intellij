@@ -207,7 +207,7 @@ configure(mainProjects) {
         // Dependencies of ':com.microsoft.alm.client:0.4.3-SNAPSHOT'
         compile 'javax.ws.rs:javax.ws.rs-api:2.0.1'
         compile 'commons-codec:commons-codec:1.10'
-        compile 'com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider:2.4.1'
+        compile 'com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider:2.15.3'
 
         // Microsoft ALM libraries that are managed by the dependencies.gradle script
         compile ':com.microsoft.alm.client:0.4.3-SNAPSHOT'

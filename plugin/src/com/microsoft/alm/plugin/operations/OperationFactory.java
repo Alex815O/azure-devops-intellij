@@ -20,4 +20,20 @@ public class OperationFactory {
     public static AccountLookupOperation createAccountLookupOperation() {
         return new AccountLookupOperation();
     }
+
+    public static SinglePullRequestLookupOperation createSinglePullRequestLookupOperation(final String remoteUrl) {
+        return new SinglePullRequestLookupOperation(remoteUrl);
+    }
+
+    public static PullRequestThreadOperation creatPullRequestThreadCreateOperation(final String remoteUrl) {
+        return new PullRequestThreadCreateOperation(remoteUrl);
+    }
+
+    public static PullRequestThreadOperation createPullRequestThreadListOperation(final String remoteUrl) {
+        return new PullRequestThreadListOperation(remoteUrl);
+    }
+
+    public static PullRequestThreadOperation createPullRequestThreadUpdateOperation(final String remoteUrl) {
+        return new PullRequestThreadUpdateOperation(remoteUrl);
+    }
 }

@@ -3,10 +3,18 @@
 
 package com.microsoft.alm.plugin.idea.git.ui.pullrequest;
 
+import com.intellij.ide.DataManager;
+import com.intellij.openapi.actionSystem.ActionManager;
+import com.intellij.openapi.actionSystem.ActionPlaces;
+import com.intellij.openapi.actionSystem.AnAction;
+import com.intellij.openapi.actionSystem.AnActionEvent;
+import com.intellij.openapi.actionSystem.DataContext;
+import com.intellij.openapi.actionSystem.impl.SimpleDataContext;
 import com.intellij.openapi.project.Project;
 import com.microsoft.alm.plugin.events.ServerEvent;
 import com.microsoft.alm.plugin.idea.common.ui.common.tabs.TabControllerImpl;
 import com.microsoft.alm.plugin.idea.common.ui.common.tabs.TabImpl;
+import com.microsoft.alm.plugin.idea.git.actions.ComparePullRequestAction;
 import org.jetbrains.annotations.NotNull;
 
 import java.awt.event.ActionEvent;
@@ -24,7 +32,21 @@ public class VcsPullRequestsController extends TabControllerImpl<VcsPullRequests
 
     @Override
     protected void performAction(final ActionEvent e) {
-        if (VcsPullRequestsForm.CMD_OPEN_SELECTED_ITEM_IN_BROWSER.equals(e.getActionCommand())) {
+        if (VcsPullRequestsForm.CMD_COMPARE_PULL_REQUEST.equals(e.getActionCommand())) {
+            AnAction action = ActionManager.getInstance().getAction("ComparePullRequestAction");
+
+            if (action != null) {
+                DataContext baseContext = DataManager.getInstance().getDataContext();
+                DataContext customContext = SimpleDataContext.getSimpleContext(ComparePullRequestAction.PULL_REQUEST_ID_DATA_KEY, model.getSelectedPullRequestId(), baseContext);
+                AnActionEvent event = AnActionEvent.createFromAnAction(
+                        action,
+                        null,
+                        ActionPlaces.UNKNOWN,
+                        customContext
+                );
+                action.actionPerformed(event);
+            }
+        } else if (VcsPullRequestsForm.CMD_OPEN_SELECTED_ITEM_IN_BROWSER.equals(e.getActionCommand())) {
             //pop up menu - open PR link in web
             model.openSelectedItemsLink();
         } else if (VcsPullRequestsForm.CMD_ABANDON_SELECTED_PR.equals(e.getActionCommand())) {
