@@ -10,9 +10,11 @@ import com.intellij.diff.requests.SimpleDiffRequest;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.actionSystem.DataKey;
 import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.application.ReadAction;
 import com.intellij.openapi.fileTypes.FileTypeManager;
 import com.intellij.openapi.project.DumbAwareAction;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.roots.ProjectRootManager;
 import com.intellij.openapi.util.Key;
 import com.intellij.openapi.vcs.VcsException;
 import com.intellij.openapi.vfs.VfsUtilCore;
@@ -34,9 +36,12 @@ import org.slf4j.LoggerFactory;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 public class ComparePullRequestAction extends DumbAwareAction {
 
@@ -51,11 +56,17 @@ public class ComparePullRequestAction extends DumbAwareAction {
     public void actionPerformed(@NotNull AnActionEvent anActionEvent) {
 
         var project = anActionEvent.getProject();
-        var repository = getGitRepository(project);
+        GitRepository repository = null;
+        try {
+            repository = getGitRepository(project);
+        } catch (InterruptedException | ExecutionException | TimeoutException e) {
+            throw new RuntimeException(e);
+        }
         var remoteUrl = extractRemoteURL(repository);
         var pullRequestId = Objects.requireNonNull(anActionEvent.getData(PULL_REQUEST_ID_DATA_KEY));
 
         var pullRequestLookupOperation = OperationFactory.createSinglePullRequestLookupOperation(remoteUrl);
+        GitRepository finalRepository = repository;
         pullRequestLookupOperation.addListener(new Operation.Listener() {
             @Override
             public void notifyLookupStarted() {
@@ -79,8 +90,8 @@ public class ComparePullRequestAction extends DumbAwareAction {
                 var sourceBrancheRefName = pullRequestResult.getSourceBranchName();
                 var changedFiles = pullRequestResult.getChangedFiles();
 
-                var targetBranch = repository.getBranches().findBranchByName(targetBranchRefName);
-                var sourceBranch = repository.getBranches().findBranchByName(sourceBrancheRefName);
+                var targetBranch = finalRepository.getBranches().findBranchByName(targetBranchRefName);
+                var sourceBranch = finalRepository.getBranches().findBranchByName(sourceBrancheRefName);
 
                 var targetBranchName = targetBranch.getName();
                 var sourceBranchName = sourceBranch.getName();
@@ -88,12 +99,12 @@ public class ComparePullRequestAction extends DumbAwareAction {
                 List<DiffRequest> diffRequests = new ArrayList<>();
                 changedFiles.stream()
                         .distinct()
-                        .map(changedFile -> repository.getRoot().findFileByRelativePath(changedFile))
+                        .map(changedFile -> finalRepository.getRoot().findFileByRelativePath(changedFile))
                         .filter(Objects::nonNull)
-                        .map(virtualFile -> VfsUtilCore.getRelativeLocation(virtualFile, repository.getRoot()))
+                        .map(virtualFile -> VfsUtilCore.getRelativeLocation(virtualFile, finalRepository.getRoot()))
                         .forEach(relativeFilePath -> {
-                            var targetFileContent = readFileFromBranch(project, repository, targetBranchName, relativeFilePath);
-                            var sourceFileContent = readFileFromBranch(project, repository, sourceBranchName, relativeFilePath);
+                            var targetFileContent = readFileFromBranch(project, finalRepository, targetBranchName, relativeFilePath);
+                            var sourceFileContent = readFileFromBranch(project, finalRepository, sourceBranchName, relativeFilePath);
                             var targetContent = DiffContentFactory.getInstance().create(project, targetFileContent);
                             var sourceContent = DiffContentFactory.getInstance().create(project, sourceFileContent);
                             var request = createDiffRequest(relativeFilePath, targetContent, sourceContent, targetBranchName, sourceBranchName);
@@ -152,18 +163,24 @@ public class ComparePullRequestAction extends DumbAwareAction {
         );
     }
 
-    private @NotNull GitRepository getGitRepository(Project project) {
-        var gitRepositories = GitUtil.getRepositories(project);
-        return getFirstAndLogOthers(gitRepositories);
+    private @NotNull GitRepository getGitRepository(Project project) throws InterruptedException, ExecutionException, TimeoutException {
+        CompletableFuture<GitRepository> future = new CompletableFuture<>();
+
+        ApplicationManager.getApplication().executeOnPooledThread(() -> {
+            ReadAction.run(() -> {
+                VirtualFile root = ProjectRootManager.getInstance(project).getContentRoots()[0];
+                GitRepository repo = GitUtil.getRepositoryManager(project).getRepositoryForRoot(root);
+                future.complete(repo);
+            });
+        });
+
+        // Blockiere maximal 2 Sekunden auf Ergebnis
+        GitRepository repository = future.get(2, TimeUnit.SECONDS);
+
+        if (repository == null) {
+            throw new IllegalStateException("Repository nicht gefunden");
+        }
+        return repository;
     }
 
-    private GitRepository getFirstAndLogOthers(Collection<GitRepository> repositories) {
-        if (repositories.isEmpty()) {
-            log.error("There are no repositories");
-        }
-        if (!repositories.isEmpty()) {
-            log.info("There are " + repositories.size() + " repositories. The first one is selected");
-        }
-        return repositories.iterator().next();
-    }
 }
