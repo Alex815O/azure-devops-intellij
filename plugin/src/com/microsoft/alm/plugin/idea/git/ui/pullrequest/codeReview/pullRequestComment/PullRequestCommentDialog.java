@@ -19,7 +19,6 @@ import javax.swing.JTextField;
 import javax.swing.KeyStroke;
 import javax.swing.UIManager;
 import javax.swing.border.MatteBorder;
-import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Font;
@@ -119,14 +118,12 @@ public class PullRequestCommentDialog extends JDialog {
         textArea.setWrapStyleWord(true);
         textArea.setFont(UIManager.getFont("Label.font"));
         textArea.setOpaque(false);
-        textArea.setBackground(new Color(0,0,0,0));
 
         JScrollPane scrollPane = new JBScrollPane(textArea);
         scrollPane.setAlignmentX(Component.LEFT_ALIGNMENT);
         scrollPane.setBorder(null);
-        scrollPane.setViewportBorder(null);
         scrollPane.setOpaque(false);
-        scrollPane.getViewport().setBackground(new Color(0,0,0,0));
+        scrollPane.getViewport().setOpaque(false);
 
         commentPanel.add(scrollPane);
 

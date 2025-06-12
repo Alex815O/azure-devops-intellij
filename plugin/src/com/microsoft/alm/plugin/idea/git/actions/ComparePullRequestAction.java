@@ -10,11 +10,14 @@ import com.intellij.diff.requests.SimpleDiffRequest;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.actionSystem.DataKey;
 import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.fileTypes.FileTypeManager;
 import com.intellij.openapi.project.DumbAwareAction;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.Key;
 import com.intellij.openapi.vcs.VcsException;
 import com.intellij.openapi.vfs.VfsUtilCore;
+import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.testFramework.LightVirtualFile;
 import com.microsoft.alm.plugin.operations.Operation;
 import com.microsoft.alm.plugin.operations.OperationExecutor;
 import com.microsoft.alm.plugin.operations.OperationFactory;
@@ -29,6 +32,7 @@ import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -48,10 +52,10 @@ public class ComparePullRequestAction extends DumbAwareAction {
 
         var project = anActionEvent.getProject();
         var repository = getGitRepository(project);
-
-        var remoteUrl = repository.getRemotes().stream().findFirst().orElseThrow().getFirstUrl();
-        var pullRequestLookupOperation = OperationFactory.createSinglePullRequestLookupOperation(remoteUrl);
+        var remoteUrl = extractRemoteURL(repository);
         var pullRequestId = Objects.requireNonNull(anActionEvent.getData(PULL_REQUEST_ID_DATA_KEY));
+
+        var pullRequestLookupOperation = OperationFactory.createSinglePullRequestLookupOperation(remoteUrl);
         pullRequestLookupOperation.addListener(new Operation.Listener() {
             @Override
             public void notifyLookupStarted() {
@@ -69,18 +73,14 @@ public class ComparePullRequestAction extends DumbAwareAction {
                     log.error(results.getError().getMessage());
                     return;
                 }
+                var pullRequestResult = (SinglePullRequestLookupOperation.SinglePullRequestLookupResults) results;
 
-                var targetBranchRefName = ((SinglePullRequestLookupOperation.SinglePullRequestLookupResults) results).getTargetBranchName();
-                var sourceBrancheRefName = ((SinglePullRequestLookupOperation.SinglePullRequestLookupResults) results).getSourceBranchName();
-                var changedFiles = ((SinglePullRequestLookupOperation.SinglePullRequestLookupResults) results).getChangedFiles();
+                var targetBranchRefName = pullRequestResult.getTargetBranchName();
+                var sourceBrancheRefName = pullRequestResult.getSourceBranchName();
+                var changedFiles = pullRequestResult.getChangedFiles();
 
                 var targetBranch = repository.getBranches().findBranchByName(targetBranchRefName);
                 var sourceBranch = repository.getBranches().findBranchByName(sourceBrancheRefName);
-
-                log.info("Target branch: {}", targetBranchRefName);
-                log.info("Source branch: {}", sourceBrancheRefName);
-                log.info("localBranches: {}", repository.getBranches().getLocalBranches());
-                log.info("remoteBranches: {}", repository.getBranches().getRemoteBranches());
 
                 var targetBranchName = targetBranch.getName();
                 var sourceBranchName = sourceBranch.getName();
@@ -91,8 +91,8 @@ public class ComparePullRequestAction extends DumbAwareAction {
                         .map(changedFile -> repository.getRoot().findFileByRelativePath(changedFile))
                         .map(virtualFile -> VfsUtilCore.getRelativeLocation(virtualFile, repository.getRoot()))
                         .forEach(relativeFilePath -> {
-                            String targetFileContent = readFileFromBranch(project, repository, targetBranchName, relativeFilePath);
-                            String sourceFileContent = readFileFromBranch(project, repository, sourceBranchName, relativeFilePath);
+                            var targetFileContent = readFileFromBranch(project, repository, targetBranchName, relativeFilePath);
+                            var sourceFileContent = readFileFromBranch(project, repository, sourceBranchName, relativeFilePath);
                             var targetContent = DiffContentFactory.getInstance().create(project, targetFileContent);
                             var sourceContent = DiffContentFactory.getInstance().create(project, sourceFileContent);
                             var request = createDiffRequest(relativeFilePath, targetContent, sourceContent, targetBranchName, sourceBranchName);
@@ -112,14 +112,34 @@ public class ComparePullRequestAction extends DumbAwareAction {
 
     }
 
-    private String readFileFromBranch(Project project, GitRepository repository, String branchName, String filePath) {
+    private static @Nullable String extractRemoteURL(GitRepository repository) {
+        return repository.getRemotes().stream().findFirst().orElseThrow().getFirstUrl();
+    }
+
+    private VirtualFile readFileFromBranch(Project project, GitRepository repository, String branchName, String filePath) {
         GitLineHandler handler = new GitLineHandler(project, repository.getRoot(), GitCommand.SHOW);
         handler.addParameters(String.format("origin/%s:%s", branchName, filePath));
+
         try {
-            return Git.getInstance().runCommand(handler).getOutputOrThrow();
+            String content = Git.getInstance().runCommand(handler).getOutputOrThrow();
+            LightVirtualFile virtualFile = new LightVirtualFile(
+                    extractFileName(filePath),
+                    FileTypeManager.getInstance().getFileTypeByFileName(filePath),
+                    content
+            );
+
+            virtualFile.setCharset(StandardCharsets.UTF_8);
+            virtualFile.setWritable(false);
+
+            return virtualFile;
+
         } catch (VcsException e) {
-            return "File does not exists in branch: " + e.getMessage();
+            return new LightVirtualFile("error.txt", "File not found: " + e.getMessage());
         }
+    }
+
+    private String extractFileName(String path) {
+        return path.contains("/") ? path.substring(path.lastIndexOf("/") + 1) : path;
     }
 
     private @NotNull DiffRequest createDiffRequest(String title, DiffContent contentLeft, DiffContent contentRight, String titleLeft, String titleRight) {
