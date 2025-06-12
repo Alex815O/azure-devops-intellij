@@ -11,8 +11,10 @@ import com.microsoft.alm.client.AlmHttpClientBase;
 import com.microsoft.alm.client.model.ApiResourceVersion;
 import com.microsoft.alm.client.model.NameValueCollection;
 import com.microsoft.alm.sourcecontrol.webapi.GitHttpClient;
-import com.microsoft.alm.sourcecontrol.webapi.model.GitCommitChanges;
+import com.microsoft.alm.sourcecontrol.webapi.model.GitBaseVersionDescriptor;
+import com.microsoft.alm.sourcecontrol.webapi.model.GitCommitDiffs;
 import com.microsoft.alm.sourcecontrol.webapi.model.GitPullRequest;
+import com.microsoft.alm.sourcecontrol.webapi.model.GitTargetVersionDescriptor;
 
 import javax.ws.rs.client.Client;
 import java.net.URI;
@@ -68,31 +70,34 @@ public class GitHttpClientEx extends GitHttpClient {
         return super.sendRequest(httpRequest, GitPullRequest.class);
     }
 
-    public GitCommitChanges getChanges(String commitId, UUID repositoryId) {
-        UUID locationId = UUID.fromString("5bf884f5-3e07-42e9-afb8-1b872267bf16");
-        ApiResourceVersion apiVersion = new ApiResourceVersion("7.1");
+    public GitCommitDiffs getCommitDiffs(UUID repositoryId, Boolean diffCommonCommit, Integer top, Integer skip, GitBaseVersionDescriptor baseVersionDescriptor, GitTargetVersionDescriptor targetVersionDescriptor) {
+        UUID locationId = UUID.fromString("615588d5-c0c7-4b88-88f8-e625306446e8");
+        ApiResourceVersion apiVersion = new ApiResourceVersion("2.1");
         Map<String, Object> routeValues = new HashMap();
-        routeValues.put("commitId", commitId);
         routeValues.put("repositoryId", repositoryId);
         NameValueCollection queryParameters = new NameValueCollection();
+        queryParameters.addIfNotNull("diffCommonCommit", diffCommonCommit);
+        queryParameters.addIfNotNull("$top", top);
+        queryParameters.addIfNotNull("$skip", skip);
+        this.addModelAsQueryParams(queryParameters, baseVersionDescriptor);
+        this.addModelAsQueryParams(queryParameters, targetVersionDescriptor);
         Object httpRequest = super.createRequest(HttpMethod.GET, locationId, routeValues, apiVersion, queryParameters, APPLICATION_JSON_TYPE);
         String jsonEntity = super.sendRequest(httpRequest, String.class);
         try {
-            return deserializeJson(jsonEntity);
+            return deserializeJson(jsonEntity, GitCommitDiffs.class);
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }
     }
 
-    private GitCommitChanges deserializeJson(final String rawJson) throws JsonProcessingException {
+    private <T> T deserializeJson(final String rawJson, final Class<T> toClass) throws JsonProcessingException {
         ObjectMapper mapper = JsonMapper.builder()
                 .enable(MapperFeature.ACCEPT_CASE_INSENSITIVE_ENUMS)
                 .build();
 
-        var entity = mapper.readValue(
+        return mapper.readValue(
                 rawJson,
-                GitCommitChanges.class
+                toClass
         );
-        return (GitCommitChanges) entity;
     }
 }

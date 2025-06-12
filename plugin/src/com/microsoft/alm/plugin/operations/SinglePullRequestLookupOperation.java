@@ -3,17 +3,18 @@ package com.microsoft.alm.plugin.operations;
 import com.microsoft.alm.plugin.context.ServerContext;
 import com.microsoft.alm.plugin.context.ServerContextManager;
 import com.microsoft.alm.plugin.context.rest.GitHttpClientEx;
+import com.microsoft.alm.sourcecontrol.webapi.model.GitBaseVersionDescriptor;
 import com.microsoft.alm.sourcecontrol.webapi.model.GitChange;
-import com.microsoft.alm.sourcecontrol.webapi.model.GitCommitChanges;
-import com.microsoft.alm.sourcecontrol.webapi.model.GitCommitRef;
 import com.microsoft.alm.sourcecontrol.webapi.model.GitPullRequest;
+import com.microsoft.alm.sourcecontrol.webapi.model.GitTargetVersionDescriptor;
+import com.microsoft.alm.sourcecontrol.webapi.model.GitVersionOptions;
+import com.microsoft.alm.sourcecontrol.webapi.model.GitVersionType;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.ws.rs.NotAuthorizedException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.Future;
 import java.util.stream.Collectors;
@@ -45,16 +46,9 @@ public class SinglePullRequestLookupOperation extends Operation {
         public SinglePullRequestLookupResults() {
         }
 
-        private void init(GitPullRequest pullRequest, List<GitCommitChanges> changes) {
+        private void init(GitPullRequest pullRequest, List<GitChange> changes) {
             this.pullRequest = pullRequest;
-            this.changes = changes.stream()
-                    .flatMap(gitCommitChange ->
-                            gitCommitChange.getChanges().stream())
-                    .collect(Collectors.toList());
-        }
-
-        public GitPullRequest getPullRequest() {
-            return pullRequest;
+            this.changes = changes;
         }
 
         public List<String> getChangedFiles() {
@@ -119,12 +113,28 @@ public class SinglePullRequestLookupOperation extends Operation {
         );
     }
 
-    private static @NotNull List<GitCommitChanges> getChangesOfPullRequest(ServerContext context, GitPullRequest pullRequest, GitHttpClientEx gitHttpClient) {
-        return Arrays.stream(pullRequest.getCommits())
-                .map(GitCommitRef::getCommitId)
-                .map(commitId ->
-                        gitHttpClient.getChanges(commitId, context.getGitRepository().getId()))
-                .collect(Collectors.toList());
+    private static @NotNull List<GitChange> getChangesOfPullRequest(ServerContext context, GitPullRequest pullRequest, GitHttpClientEx gitHttpClient) {
+        var sourceBranch = extractSimpleBranchName(pullRequest.getSourceRefName());
+        var targetBranch = extractSimpleBranchName(pullRequest.getTargetRefName());
+
+        var gitBaseVersionDescriptor = new GitBaseVersionDescriptor();
+        gitBaseVersionDescriptor.setVersion(sourceBranch);
+        gitBaseVersionDescriptor.setVersionType(GitVersionType.BRANCH);
+        gitBaseVersionDescriptor.setVersionOptions(GitVersionOptions.NONE);
+
+        var gitTargetVersionDescriptor = new GitTargetVersionDescriptor();
+        gitTargetVersionDescriptor.setVersion(targetBranch);
+        gitTargetVersionDescriptor.setVersionType(GitVersionType.BRANCH);
+        gitTargetVersionDescriptor.setVersionOptions(GitVersionOptions.NONE);
+
+        var repositoryId = context.getGitRepository().getId();
+
+        var commitDiffs = gitHttpClient.getCommitDiffs(repositoryId, true, null, 0, gitBaseVersionDescriptor, gitTargetVersionDescriptor);
+        return commitDiffs.getChanges();
+    }
+
+    private static String extractSimpleBranchName(String branchRefName) {
+        return branchRefName.split("heads/")[1];
     }
 
     @Override
