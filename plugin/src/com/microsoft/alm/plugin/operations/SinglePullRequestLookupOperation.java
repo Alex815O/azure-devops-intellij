@@ -129,7 +129,7 @@ public class SinglePullRequestLookupOperation extends Operation {
 
         var repositoryId = context.getGitRepository().getId();
 
-        var commitDiffs = gitHttpClient.getCommitDiffs(repositoryId, true, null, 0, gitBaseVersionDescriptor, gitTargetVersionDescriptor);
+        var commitDiffs = gitHttpClient.getCommitDiffs(repositoryId, false, null, 0, gitBaseVersionDescriptor, gitTargetVersionDescriptor);
         return commitDiffs.getChanges();
     }
 

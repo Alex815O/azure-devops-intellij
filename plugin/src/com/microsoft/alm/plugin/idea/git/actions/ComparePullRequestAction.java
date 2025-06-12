@@ -89,6 +89,7 @@ public class ComparePullRequestAction extends DumbAwareAction {
                 changedFiles.stream()
                         .distinct()
                         .map(changedFile -> repository.getRoot().findFileByRelativePath(changedFile))
+                        .filter(Objects::nonNull)
                         .map(virtualFile -> VfsUtilCore.getRelativeLocation(virtualFile, repository.getRoot()))
                         .forEach(relativeFilePath -> {
                             var targetFileContent = readFileFromBranch(project, repository, targetBranchName, relativeFilePath);
@@ -120,22 +121,21 @@ public class ComparePullRequestAction extends DumbAwareAction {
         GitLineHandler handler = new GitLineHandler(project, repository.getRoot(), GitCommand.SHOW);
         handler.addParameters(String.format("origin/%s:%s", branchName, filePath));
 
+        LightVirtualFile virtualFile = null;
         try {
             String content = Git.getInstance().runCommand(handler).getOutputOrThrow();
-            LightVirtualFile virtualFile = new LightVirtualFile(
+            virtualFile = new LightVirtualFile(
                     extractFileName(filePath),
                     FileTypeManager.getInstance().getFileTypeByFileName(filePath),
                     content
             );
-
-            virtualFile.setCharset(StandardCharsets.UTF_8);
-            virtualFile.setWritable(false);
-
-            return virtualFile;
-
         } catch (VcsException e) {
-            return new LightVirtualFile("error.txt", "File not found: " + e.getMessage());
+            virtualFile = new LightVirtualFile("DoesNotExistsInTarget.txt", "");
         }
+        virtualFile.setCharset(StandardCharsets.UTF_8);
+        virtualFile.setWritable(false);
+        return virtualFile;
+
     }
 
     private String extractFileName(String path) {
