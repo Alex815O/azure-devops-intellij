@@ -7,9 +7,11 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.json.JsonMapper;
+import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.microsoft.alm.client.AlmHttpClientBase;
 import com.microsoft.alm.client.model.ApiResourceVersion;
 import com.microsoft.alm.client.model.NameValueCollection;
+import com.microsoft.alm.plugin.context.rest.deserialiser.GitCommitDiffsDeserializer;
 import com.microsoft.alm.sourcecontrol.webapi.GitHttpClient;
 import com.microsoft.alm.sourcecontrol.webapi.model.GitBaseVersionDescriptor;
 import com.microsoft.alm.sourcecontrol.webapi.model.GitCommitDiffs;
@@ -94,6 +96,10 @@ public class GitHttpClientEx extends GitHttpClient {
         ObjectMapper mapper = JsonMapper.builder()
                 .enable(MapperFeature.ACCEPT_CASE_INSENSITIVE_ENUMS)
                 .build();
+
+        SimpleModule module = new SimpleModule();
+        module.addDeserializer(GitCommitDiffs.class, new GitCommitDiffsDeserializer());
+        mapper.registerModule(module);
 
         return mapper.readValue(
                 rawJson,

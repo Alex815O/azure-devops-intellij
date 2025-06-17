@@ -15,7 +15,6 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
-import javax.swing.JTextField;
 import javax.swing.KeyStroke;
 import javax.swing.UIManager;
 import javax.swing.border.MatteBorder;
@@ -33,7 +32,7 @@ public class PullRequestCommentDialog extends JDialog {
     private JButton buttonOK;
     private JButton buttonCancel;
     private JPanel commentPanel;
-    private JTextField commentField;
+    private JTextArea commentField;
 
     private final PullRequestCommentController controller;
 
